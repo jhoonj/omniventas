@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap');
+
+:host { font-family: 'Poppins', sans-serif; display: block; }
+
+.w-full { width: 100%; }
+.text-right { text-align: right; }
+.mt-6 { margin-top: 24px; }
+
+.contenido { padding: 24px; text-align: left; color: #333; }
+
+.hero {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 24px; background: linear-gradient(to right, #e3f2fd, #ffffff);
+  border: 1px solid #e0e0e0; border-radius: 12px;
+}
+
+.hero-content h1 { font-size: 28px; font-weight: 700; margin: 0 0 8px; }
+.hero-content p { margin: 0 0 12px; color: #555; }
+.brand { color: #5a2fc2; }
+
+.table-wrapper { overflow: auto; background: #fff; border-radius: 12px; border: 1px solid #e0e0e0; }
+table { min-width: 720px; }
+
+th[mat-header-cell] { font-weight: 600; color: #3f3f3f; background: #fafafa; }
+td[mat-cell], th[mat-header-cell] { padding: 12px 16px !important; }
+
+.empty {
+  margin-top: 32px; padding: 40px 24px; text-align: center;
+  background: #fff; border: 1px dashed #cfcfcf; border-radius: 12px;
+}
+.empty img { height: 64px; opacity: 0.6; margin-bottom: 8px; }
+.empty h3 { margin: 8px 0 4px; font-size: 20px; font-weight: 600; }
+.empty p { margin: 0 0 12px; color: #666; }

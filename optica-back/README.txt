@@ -1,0 +1,1 @@
+Proyecto backend de óptica - estructura regenerada temporalmente.

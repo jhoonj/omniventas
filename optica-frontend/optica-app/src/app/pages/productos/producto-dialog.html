@@ -1,0 +1,47 @@
+<h2 mat-dialog-title>{{ form.value.id ? 'Editar Producto' : 'Nuevo Producto' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" style="width:100%">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" style="width:100%">
+      <mat-label>Descripción</mat-label>
+      <textarea matInput rows="3" formControlName="descripcion"></textarea>
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" style="width:100%">
+      <mat-label>Tipo</mat-label>
+      <mat-select formControlName="tipo">
+        <mat-option value="">(Sin tipo)</mat-option>
+        <mat-option *ngFor="let t of tipos" [value]="t">{{ t }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+      <mat-form-field appearance="outline">
+        <mat-label>Precio</mat-label>
+        <input matInput type="number" formControlName="precio">
+      </mat-form-field>
+
+      <mat-form-field appearance="outline">
+        <mat-label>Stock</mat-label>
+        <input matInput type="number" formControlName="stock">
+      </mat-form-field>
+    </div>
+
+    <mat-form-field appearance="outline" style="width:100%">
+      <mat-label>Proveedor</mat-label>
+      <mat-select formControlName="proveedor_id">
+        <mat-option [value]="null">(Sin proveedor)</mat-option>
+        <mat-option *ngFor="let pr of proveedores" [value]="pr.id">{{ pr.nombre }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid">Guardar</button>
+</mat-dialog-actions>

@@ -1,0 +1,66 @@
+<div class="contenido">
+  <!-- Header / Hero -->
+  <div class="hero">
+    <div class="hero-content">
+      <h1 class="brand">Administración de Proveedores</h1>
+      <p>Crear, editar, eliminar y consultar proveedores.</p>
+      <button mat-flat-button color="primary" (click)="openCreate()">Nuevo proveedor</button>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="mt-6 table-wrapper" *ngIf="proveedores()?.length; else emptyState">
+    <table mat-table [dataSource]="proveedores()" class="mat-elevation-z1 w-full">
+
+      <!-- Nombre -->
+      <ng-container matColumnDef="nombre">
+        <th mat-header-cell *matHeaderCellDef> Nombre </th>
+        <td mat-cell *matCellDef="let p"> {{ p.nombre }} </td>
+      </ng-container>
+
+      <!-- Email -->
+      <ng-container matColumnDef="email">
+        <th mat-header-cell *matHeaderCellDef> Email </th>
+        <td mat-cell *matCellDef="let p"> {{ p.email || '—' }} </td>
+      </ng-container>
+
+      <!-- Teléfono -->
+      <ng-container matColumnDef="telefono">
+        <th mat-header-cell *matHeaderCellDef> Teléfono </th>
+        <td mat-cell *matCellDef="let p"> {{ p.telefono || '—' }} </td>
+      </ng-container>
+
+      <!-- Dirección -->
+      <ng-container matColumnDef="direccion">
+        <th mat-header-cell *matHeaderCellDef> Dirección </th>
+        <td mat-cell *matCellDef="let p"> {{ p.direccion || '—' }} </td>
+      </ng-container>
+
+      <!-- Acciones -->
+      <ng-container matColumnDef="acciones">
+        <th mat-header-cell *matHeaderCellDef class="text-right"> Acciones </th>
+        <td mat-cell *matCellDef="let p" class="text-right">
+          <button mat-icon-button (click)="openEdit(p)" aria-label="Editar">
+            <mat-icon>edit</mat-icon>
+          </button>
+          <button mat-icon-button color="warn" (click)="remove(p)" aria-label="Eliminar">
+            <mat-icon>delete</mat-icon>
+          </button>
+        </td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="cols"></tr>
+      <tr mat-row *matRowDef="let row; columns: cols;"></tr>
+    </table>
+  </div>
+
+  <!-- Empty state -->
+  <ng-template #emptyState>
+    <div class="empty">
+      <img src="https://cdn.jsdelivr.net/gh/tabler/tabler-icons/icons/box-seam.svg" alt="Empty" />
+      <h3>No hay proveedores</h3>
+      <p>Comienza creando tu primer proveedor.</p>
+      <button mat-flat-button color="primary" (click)="openCreate()">Nuevo proveedor</button>
+    </div>
+  </ng-template>
+</div>

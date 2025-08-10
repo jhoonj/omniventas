@@ -1,0 +1,22 @@
+{
+  "groups": [
+    {
+      "name": "security.jwt",
+      "type": "com.optica.security.jwt.JwtProperties",
+      "sourceType": "com.optica.security.jwt.JwtProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "security.jwt.issuer",
+      "type": "java.lang.String",
+      "sourceType": "com.optica.security.jwt.JwtProperties"
+    },
+    {
+      "name": "security.jwt.secret",
+      "type": "java.lang.String",
+      "sourceType": "com.optica.security.jwt.JwtProperties"
+    }
+  ],
+  "hints": []
+}

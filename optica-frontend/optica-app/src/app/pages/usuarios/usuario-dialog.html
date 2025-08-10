@@ -1,0 +1,30 @@
+<h2 mat-dialog-title>{{ data.usuario.id ? 'Editar Usuario' : 'Nuevo Usuario' }}</h2>
+<mat-dialog-content>
+  <form [formGroup]="form">
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>Nombre</mat-label>
+      <input matInput formControlName="nombre">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>Email</mat-label>
+      <input matInput formControlName="email">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>Contraseña</mat-label>
+      <input matInput type="password" formControlName="contrasenaHash">
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" style="width: 100%;">
+      <mat-label>Rol</mat-label>
+      <mat-select formControlName="rol_id">
+        <mat-option *ngFor="let r of roles" [value]="r.id">{{ r.nombre }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+  </form>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Cancelar</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid">Guardar</button>
+</mat-dialog-actions>

@@ -1,0 +1,62 @@
+<mat-sidenav-container class="sidenav-container">
+  <mat-sidenav #drawer class="sidenav" mode="side" opened>
+    <mat-toolbar color="primary">Menú</mat-toolbar>
+    <mat-nav-list>
+      <a mat-list-item routerLink="/productos">
+        <mat-icon>shopping_bag</mat-icon>
+        <span>Productos</span>
+      </a>
+      <a mat-list-item routerLink="/formulas">
+        <mat-icon>healing</mat-icon>
+        <span>Fórmulas</span>
+      </a>
+      <a mat-list-item routerLink="/pedidos">
+        <mat-icon>receipt_long</mat-icon>
+        <span>Pedidos</span>
+      </a>
+      <a mat-list-item routerLink="/envios">
+        <mat-icon>local_shipping</mat-icon>
+        <span>Envíos</span>
+      </a>
+      <a mat-list-item routerLink="/clientes">
+        <mat-icon>person</mat-icon>
+        <span>Clientes</span>
+      </a>
+      <a mat-list-item routerLink="/usuarios">
+        <mat-icon>group</mat-icon>
+        <span>Usuarios</span>
+      </a>
+     <a mat-list-item routerLink="/proveedores">
+        <mat-icon>group</mat-icon>
+        <span>Proveedores</span>
+      </a>
+    </mat-nav-list>
+  </mat-sidenav>
+
+  <mat-sidenav-content>
+    <mat-toolbar class="topbar">
+      <button mat-icon-button (click)="drawer.toggle()" class="menu-button">
+        <mat-icon>menu</mat-icon>
+      </button>
+      <span class="logo">Óptica Vista Bella</span>
+      <span class="spacer"></span>
+      <mat-form-field appearance="outline" class="search-field">
+        <mat-label>Buscar</mat-label>
+        <input matInput placeholder="Buscar productos, pedidos...">
+        <button mat-icon-button matSuffix>
+          <mat-icon>search</mat-icon>
+        </button>
+      </mat-form-field>
+    </mat-toolbar>
+
+    <div class="hero">
+      <div class="hero-content">
+        <h1>Explora la colección de <span class="brand">Óptica Vista Bella</span></h1>
+        <p>Últimos modelos, mejor tecnología visual y asesoría personalizada</p>
+        <button mat-flat-button color="primary">Ver Colección</button>
+      </div>
+
+    </div>
+
+  </mat-sidenav-content>
+</mat-sidenav-container>

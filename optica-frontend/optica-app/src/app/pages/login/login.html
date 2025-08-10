@@ -1,0 +1,17 @@
+<mat-card style="max-width: 400px; margin: auto; margin-top: 80px;">
+  <h2>Iniciar sesión</h2>
+
+<form [formGroup]="form" (ngSubmit)="login()">
+  <mat-form-field appearance="fill">
+    <mat-label>Email</mat-label>
+    <input matInput formControlName="email" type="email" />
+  </mat-form-field>
+
+  <mat-form-field appearance="fill">
+    <mat-label>Contraseña</mat-label>
+    <input matInput formControlName="password" type="password" />
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" type="submit">Iniciar sesión</button>
+</form>
+</mat-card>
