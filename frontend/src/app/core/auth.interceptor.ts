@@ -2,7 +2,7 @@
 import { HttpInterceptorFn } from '@angular/common/http';
 
 function isAuthUrl(url: string): boolean {
-  // Ajusta si tu baseUrl cambia. Incluye /optica si aplica.
+  // Ajusta si tu baseUrl cambia. Incluye /omniventas si aplica.
   return url.includes('/auth/login') || url.includes('/auth/refresh');
 }
 
@@ -22,7 +22,6 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   // 1) Nunca adjuntar Authorization a /auth/*
   if (isAuthUrl(req.url)) {
-    console.log('[HTTP]', req.method, req.url, 'Auth? false');
     return next(req);
   }
 
@@ -35,6 +34,5 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     localStorage.removeItem('token');
   }
 
-  console.log('[HTTP]', req.method, req.url, 'Auth?', finalReq.headers.has('Authorization'));
   return next(finalReq);
 };

@@ -6,6 +6,9 @@ import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.Instant;
+import java.util.UUID;
+
 @Repository
 public class R2dbcClienteAdapter implements ClienteRepository {
 
@@ -15,32 +18,64 @@ public class R2dbcClienteAdapter implements ClienteRepository {
         this.repo = repo;
     }
 
-    @Override
-    public Mono<Cliente> save(Cliente cliente) {
-        var entity = new R2dbcClienteEntity();
-        entity.setId(cliente.id());
-        entity.setNombre(cliente.nombre());
-        entity.setEmail(cliente.email());
-        entity.setTelefono(cliente.telefono());
-        entity.setDireccion(cliente.direccion());
-        return repo.save(entity).map(e -> new Cliente(
-            e.getId(), e.getNombre(), e.getEmail(), e.getTelefono(), e.getDireccion()));
+    private static Cliente toDomain(R2dbcClienteEntity e) {
+        if (e == null) return null;
+        return new Cliente(
+                e.getId(),
+                e.getUid(),
+                e.getNombre(),
+                e.getEmail(),
+                e.getTelefono(),
+                e.getDireccion(),
+                e.getCreatedAt(),
+                e.getUpdatedAt()
+        );
+    }
+
+    private static R2dbcClienteEntity toEntity(Cliente c) {
+        R2dbcClienteEntity e = new R2dbcClienteEntity();
+        e.setId(c.id());
+        e.setUid(c.uid() != null ? c.uid() : UUID.randomUUID()); // por si viene null, DB también tiene DEFAULT
+        e.setNombre(c.nombre());
+        e.setEmail(c.email());
+        e.setTelefono(c.telefono());
+        e.setDireccion(c.direccion());
+        e.setCreatedAt(c.createdAt());
+        e.setUpdatedAt(c.updatedAt());
+        return e;
     }
 
     @Override
-    public Mono<Cliente> findById(Long id) {
-        return repo.findById(id).map(e -> new Cliente(
-            e.getId(), e.getNombre(), e.getEmail(), e.getTelefono(), e.getDireccion()));
+    public Mono<Cliente> save(Cliente cliente) {
+        R2dbcClienteEntity entity = toEntity(cliente);
+        // Si es creación y no trae timestamps, inicializa
+        if (entity.getId() == null) {
+            if (entity.getUid() == null) entity.setUid(UUID.randomUUID());
+            if (entity.getCreatedAt() == null) entity.setCreatedAt(Instant.now());
+            entity.setUpdatedAt(Instant.now());
+        } else {
+            entity.setUpdatedAt(Instant.now());
+        }
+        return repo.save(entity).map(R2dbcClienteAdapter::toDomain);
+    }
+
+    @Override
+    public Mono<Cliente> findByUid(UUID uid) {
+        return repo.findByUid(uid).map(R2dbcClienteAdapter::toDomain);
+    }
+
+    @Override
+    public Mono<Boolean> existsByEmail(String email) {
+        return repo.existsByEmail(email);
     }
 
     @Override
     public Flux<Cliente> findAll() {
-        return repo.findAll().map(e -> new Cliente(
-            e.getId(), e.getNombre(), e.getEmail(), e.getTelefono(), e.getDireccion()));
+        return repo.findAll().map(R2dbcClienteAdapter::toDomain);
     }
 
     @Override
-    public Mono<Void> deleteById(Long id) {
-        return repo.deleteById(id);
+    public Mono<Void> deleteByUid(UUID uid) {
+        return repo.deleteByUid(uid);
     }
 }

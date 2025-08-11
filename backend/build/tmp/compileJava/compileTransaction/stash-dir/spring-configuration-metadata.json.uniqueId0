@@ -1,0 +1,22 @@
+{
+  "groups": [
+    {
+      "name": "security.jwt",
+      "type": "com.omniventas.security.jwt.JwtProperties",
+      "sourceType": "com.omniventas.security.jwt.JwtProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "security.jwt.issuer",
+      "type": "java.lang.String",
+      "sourceType": "com.omniventas.security.jwt.JwtProperties"
+    },
+    {
+      "name": "security.jwt.secret",
+      "type": "java.lang.String",
+      "sourceType": "com.omniventas.security.jwt.JwtProperties"
+    }
+  ],
+  "hints": []
+}

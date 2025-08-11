@@ -5,7 +5,7 @@ import { Usuario } from './usuario.model';
 
 @Injectable({ providedIn: 'root' })
 export class UsuariosService {
-  private baseUrl = 'http://localhost:8080/optica/usuarios';
+  private baseUrl = 'http://localhost:8080/omniventas/usuarios';
 
   constructor(private http: HttpClient) {}
 

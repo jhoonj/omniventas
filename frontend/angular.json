@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "optica-app": {
+    "omniventas-app": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -62,10 +62,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "optica-app:build:production"
+              "buildTarget": "omniventas-app:build:production"
             },
             "development": {
-              "buildTarget": "optica-app:build:development"
+              "buildTarget": "omniventas-app:build:development"
             }
           },
           "defaultConfiguration": "development"

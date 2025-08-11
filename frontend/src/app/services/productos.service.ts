@@ -14,7 +14,7 @@ export interface Producto {
 @Injectable({ providedIn: 'root' })
 export class ProductosService {
   private http = inject(HttpClient);
-  private baseUrl = 'http://localhost:8080/optica/productos';
+  private baseUrl = 'http://localhost:8080//productos';
 
   getProductos(): Observable<Producto[]> {
     return this.http.get<Producto[]>(this.baseUrl);

@@ -22,9 +22,6 @@ springdoc:
 logging:
   level:
     org.springframework.r2dbc.connection.init: DEBUG
-    com.omniventas.security.jwt: DEBUG
-    org.springframework.security: TRACE
-    org.springframework.web.server : DEBUG
 
 security:
   jwt:

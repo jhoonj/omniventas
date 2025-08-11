@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Proveedor } from '../proveedores/proveedor.model';
 
-const API_BASE = '/optica'; // ajusta
+const API_BASE = '/omniventas'; // ajusta
 const URL = `${API_BASE}/proveedores`;
 
 @Injectable({ providedIn: 'root' })

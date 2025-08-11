@@ -44,7 +44,8 @@ dependencies {
 
     // R2DBC + PostgreSQL
     implementation 'org.springframework.boot:spring-boot-starter-data-r2dbc'
-    runtimeOnly 'io.r2dbc:r2dbc-postgresql:0.8.13.RELEASE'
+   // runtimeOnly 'io.r2dbc:r2dbc-postgresql:0.8.13.RELEASE'
+    runtimeOnly 'org.postgresql:r2dbc-postgresql:1.0.5.RELEASE'
 
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("io.projectreactor:reactor-test")

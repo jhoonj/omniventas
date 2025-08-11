@@ -44,7 +44,7 @@ export class LoginComponent {
 
     
 
-    this.http.post<any>('http://localhost:8080/optica/auth/login', value).subscribe({
+    this.http.post<any>('http://localhost:8080/omniventas/auth/login', value).subscribe({
       next: (res) => {
         localStorage.setItem('token', res.token);
         this.router.navigate(['/inicio']);

@@ -1,3 +1,4 @@
+// src/app/pages/clientes/clientes.component.ts
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
@@ -39,33 +40,20 @@ export class ClientesComponent implements OnInit {
 
   openCreate() {
     this.dialog.open(ClienteDialogComponent, { data: {} })
-      .afterClosed().subscribe((c: Cliente | undefined) => {
-        if (!c) return;
-        this.svc.save(c).subscribe({
-          next: () => { this.snack.open('Cliente creado', 'OK', { duration: 2000 }); this.load(); },
-          error: () => this.snack.open('Error creando cliente', 'Cerrar', { duration: 3000 })
-        });
-      });
+      .afterClosed().subscribe(ok => { if (ok) this.load(); });
   }
 
   openEdit(c: Cliente) {
     this.dialog.open(ClienteDialogComponent, { data: { cliente: c } })
-      .afterClosed().subscribe((upd: Cliente | undefined) => {
-        if (!upd) return;
-        const body: Cliente = { ...c, ...upd, id: c.id };
-        this.svc.save(body).subscribe({
-          next: () => { this.snack.open('Cliente actualizado', 'OK', { duration: 2000 }); this.load(); },
-          error: () => this.snack.open('Error actualizando cliente', 'Cerrar', { duration: 3000 })
-        });
-      });
+      .afterClosed().subscribe(ok => { if (ok) this.load(); });
   }
 
   remove(c: Cliente) {
-    if (!c.id) return;
+    if (!c.uid) return;
     if (!confirm(`¿Eliminar cliente "${c.nombre}"?`)) return;
-    this.svc.delete(c.id).subscribe({
-      next: () => { this.snack.open('Cliente eliminado', 'OK', { duration: 2000 }); this.load(); },
-      error: () => this.snack.open('Error eliminando cliente', 'Cerrar', { duration: 3000 })
+    this.svc.delete(c.uid).subscribe({
+      next: () => { this.snack.open('Cliente eliminado', 'OK', { duration: 1800 }); this.load(); },
+      error: (err) => this.snack.open(err?.error?.message || 'Error eliminando cliente', 'Cerrar', { duration: 3000 })
     });
   }
 }

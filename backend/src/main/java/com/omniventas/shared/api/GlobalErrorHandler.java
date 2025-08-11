@@ -22,78 +22,75 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalErrorHandler {
 
-    // 401 – credenciales malas (tu caso actual)
     @ExceptionHandler(AuthService.InvalidCredentialsException.class)
-    public Mono<ResponseEntity<ApiError>> handleInvalidCreds(ServerWebExchange ex) {
-        var body = ApiError.of(401, "Unauthorized", "Credenciales inválidas", ex.getRequest().getPath().value());
-        return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body));
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleInvalidCreds(ServerWebExchange ex) {
+        var err = ApiError.of(401, "Unauthorized", "Credenciales inválidas", ex.getRequest().getPath().value());
+        return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.fail(err)));
     }
 
-    // 401 – JWT expirado/firma inválida
-    @ExceptionHandler({ExpiredJwtException.class, SignatureException.class, IllegalArgumentException.class})
-    public Mono<ResponseEntity<ApiError>> handleJwtErrors(ServerWebExchange ex, Exception e) {
-        var msg = (e instanceof ExpiredJwtException) ? "Token expirado" :
-                (e instanceof SignatureException) ? "Firma de token inválida" :
-                        "Token inválido";
-        var body = ApiError.of(401, "Unauthorized", msg, ex.getRequest().getPath().value());
-        return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(body));
+    @ExceptionHandler({ExpiredJwtException.class, SignatureException.class})
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleJwtErrors(ServerWebExchange ex, Exception e) {
+        var msg = (e instanceof ExpiredJwtException) ? "Token expirado" : "Firma de token inválida";
+        var err = ApiError.of(401, "Unauthorized", msg, ex.getRequest().getPath().value());
+        return Mono.just(ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ApiResponse.fail(err)));
     }
 
-    // 403 – sin permisos
+    @ExceptionHandler(IllegalArgumentException.class)
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleIllegalArg(ServerWebExchange ex, IllegalArgumentException e) {
+        var err = ApiError.of(400, "Bad Request", e.getMessage(), ex.getRequest().getPath().value());
+        return Mono.just(ResponseEntity.badRequest().body(ApiResponse.fail(err)));
+    }
+
     @ExceptionHandler(AccessDeniedException.class)
-    public Mono<ResponseEntity<ApiError>> handleAccessDenied(ServerWebExchange ex) {
-        var body = ApiError.of(403, "Forbidden", "Acceso denegado", ex.getRequest().getPath().value());
-        return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body(body));
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleAccessDenied(ServerWebExchange ex) {
+        var err = ApiError.of(403, "Forbidden", "Acceso denegado", ex.getRequest().getPath().value());
+        return Mono.just(ResponseEntity.status(HttpStatus.FORBIDDEN).body(ApiResponse.fail(err)));
     }
 
-    // 400 – body/query inválidos o tipos incorrectos
-    @ExceptionHandler({ServerWebInputException.class})
-    public Mono<ResponseEntity<ApiError>> handleBadRequest(ServerWebExchange ex, Exception e) {
-        var body = ApiError.of(400, "Bad Request", e.getMessage(), ex.getRequest().getPath().value());
-        return Mono.just(ResponseEntity.badRequest().body(body));
+    @ExceptionHandler(ServerWebInputException.class)
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleBadRequest(ServerWebExchange ex, Exception e) {
+        var err = ApiError.of(400, "Bad Request", e.getMessage(), ex.getRequest().getPath().value());
+        return Mono.just(ResponseEntity.badRequest().body(ApiResponse.fail(err)));
     }
 
-    // 400 – validación con @Valid (Bean Validation)
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public Mono<ResponseEntity<Object>> handleValidation(ServerWebExchange ex, MethodArgumentNotValidException e) {
-        Map<String, String> errors = e.getBindingResult().getFieldErrors()
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleValidation(ServerWebExchange ex, MethodArgumentNotValidException e) {
+        Map<String, String> fields = e.getBindingResult().getFieldErrors()
                 .stream().collect(Collectors.toMap(FieldError::getField, FieldError::getDefaultMessage, (a,b)->a));
-        return Mono.just(ResponseEntity.badRequest().body(Map.of(
-                "timestamp", java.time.Instant.now().toString(),
-                "status", 400,
-                "error", "Bad Request",
-                "message", "Validación fallida",
-                "path", ex.getRequest().getPath().value(),
-                "errors", errors
-        )));
+
+        var err = ApiError.withDetails(
+                400, "Bad Request", "Validación fallida",
+                ex.getRequest().getPath().value(),
+                Map.of("fields", fields)
+        );
+        return Mono.just(ResponseEntity.badRequest().body(ApiResponse.fail(err)));
     }
 
-    // 409 – violación de unicidad (roles.nombre, usuarios.email, etc.)
     @ExceptionHandler(DataIntegrityViolationException.class)
-    public Mono<ResponseEntity<ApiError>> handleConflict(ServerWebExchange ex, DataIntegrityViolationException e) {
-        var body = ApiError.of(409, "Conflict", "Registro duplicado o restricción violada", ex.getRequest().getPath().value());
-        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).body(body));
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleConflict(ServerWebExchange ex, DataIntegrityViolationException e) {
+        var err = ApiError.of(409, "Conflict", "Registro duplicado o restricción violada", ex.getRequest().getPath().value());
+        return Mono.just(ResponseEntity.status(HttpStatus.CONFLICT).body(ApiResponse.fail(err)));
     }
 
-    // Propaga ResponseStatusException tal cual (404, 422, etc.)
     @ExceptionHandler(ResponseStatusException.class)
-    public Mono<ResponseEntity<ApiError>> handleRSE(ServerWebExchange ex, ResponseStatusException e) {
-
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleRSE(ServerWebExchange ex, ResponseStatusException e) {
         HttpStatus status = (HttpStatus) e.getStatusCode();
-        var body = ApiError.of(
+        var err = ApiError.of(
                 status.value(),
-                status.getReasonPhrase(), // ahora sí existe
+                status.getReasonPhrase(),
                 e.getReason() == null ? "" : e.getReason(),
                 ex.getRequest().getPath().value()
         );
-        return Mono.just(ResponseEntity.status(e.getStatusCode()).body(body));
+        return Mono.just(ResponseEntity.status(e.getStatusCode()).body(ApiResponse.fail(err)));
     }
 
-    // 500 – fallback
+
     @ExceptionHandler(Throwable.class)
-    public Mono<ResponseEntity<ApiError>> handleAll(ServerWebExchange ex, Throwable t) {
-        // TODO: loggear stacktrace con tu logger
-        var body = ApiError.of(500, "Internal Server Error", "Ocurrió un error inesperado", ex.getRequest().getPath().value());
-        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body));
+    public Mono<ResponseEntity<ApiResponse<Void>>> handleAll(ServerWebExchange ex, Throwable t) {
+        // TODO: loggear stacktrace3
+        t.printStackTrace();
+
+        var err = ApiError.of(500, "Internal Server Error", "Ocurrió un error inesperado", ex.getRequest().getPath().value());
+        return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(ApiResponse.fail(err)));
     }
 }

@@ -1,81 +1,126 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject, signal } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { Producto } from './producto.model';
-import { ProductosService } from './productos.service';
-import { ProductoDialogComponent } from './producto-dialog.component';
-import { MatTableDataSource } from '@angular/material/table';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { forkJoin, of } from 'rxjs';
+import { catchError, map, switchMap } from 'rxjs/operators';
+
+import { ProductosService } from './productos.service';
+import { ProveedoresService } from '../proveedores/proveedores.service';
+import { Producto } from './producto.model';
+import { Proveedor } from '../proveedores/proveedor.model';
+import { ProductoDialogComponent } from './producto-dialog.component';
+import { MovimientoDialogComponent } from './movimiento-dialog.component';
+
+// ⬇️ si tu componente es standalone, asegúrate de tener estos imports
+// (si usas NgModule, ve a la sección 3)
+import { CommonModule } from '@angular/common';
 import { MatTableModule } from '@angular/material/table';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
-import { CurrencyPipe, CommonModule } from '@angular/common';
+import { MatChipsModule } from '@angular/material/chips';
+
 
 
 @Component({
+  // ⬇️ si NO eres standalone, quita estas 4 líneas (standalone/imports)
+  standalone: true,
+  imports: [CommonModule, MatTableModule, MatButtonModule, MatIconModule, MatDialogModule, MatSnackBarModule, MatChipsModule],
   selector: 'app-productos',
-   standalone: true,
-  imports: [MatTableModule, MatButtonModule, MatIconModule, MatDialogModule, MatSnackBarModule,CurrencyPipe, CommonModule],
-  templateUrl: './productos.html'
+  templateUrl: './productos.html',
+  styleUrls: ['./productos.scss']
 })
 export class ProductosComponent implements OnInit {
-  displayedColumns = ['id', 'nombre', 'tipo', 'precio', 'stock', 'proveedor', 'acciones'];
-  data = new MatTableDataSource<Producto>([]);
+  // añadimos la columna 'stock'
+  cols = ['nombre', 'tipo', 'precio', 'proveedor', 'stock', 'acciones'];
 
-  constructor(
-    private productos: ProductosService,
-    private dialog: MatDialog,
-    private snack: MatSnackBar
-  ) {}
+  private productosSrv = inject(ProductosService);
+  private proveedoresSrv = inject(ProveedoresService);
+  private dialog = inject(MatDialog);
+  private snack = inject(MatSnackBar);
 
-  ngOnInit() { this.load(); }
+  private _productos = signal<(Producto & { proveedorNombre?: string; stock?: number })[]>([]);
+  productos = this._productos.asReadonly();
+  loading = signal(false);
 
-  load() {
-    this.productos.list().subscribe({
-      next: items => this.data.data = items,
-      error: () => this.snack.open('Error cargando productos', 'Cerrar', { duration: 2500 })
-    });
+  ngOnInit(): void {
+    this.cargar();
+  }
+
+  cargar(): void {
+    this.loading.set(true);
+
+    forkJoin({
+      productos: this.productosSrv.list(),
+      proveedores: this.proveedoresSrv.list()
+    })
+      .pipe(
+        map(({ productos, proveedores }) => {
+          // mapas por UID e ID del proveedor, por si tu backend envía cualquiera
+          const mapUidToName = new Map<string, string>();
+          const mapIdToName = new Map<number, string>();
+          (proveedores as Proveedor[]).forEach(p => {
+            if (p.uid) mapUidToName.set(p.uid, p.nombre);
+            if (p.id != null) mapIdToName.set(p.id, p.nombre);
+          });
+
+          const enriched = (productos as any[]).map(p => {
+            const proveedorNombre =
+              (p.proveedorUid ? mapUidToName.get(p.proveedorUid) : undefined) ??
+              (p.proveedorId != null ? mapIdToName.get(p.proveedorId) : undefined) ??
+              '—';
+            return { ...p, proveedorNombre } as Producto & { proveedorNombre?: string };
+          });
+
+          return enriched;
+        })
+      )
+      .subscribe({
+        next: arr => this._productos.set(arr),
+        error: err => {
+          const msg = err?.error?.message || 'No se pudo cargar productos';
+          this.snack.open(msg, 'Cerrar', { duration: 3000 });
+        },
+        complete: () => this.loading.set(false)
+      });
+  }
+
+  // color del chip según stock
+  stockColor(p: { stock?: number }): 'primary' | 'accent' | 'warn' {
+    const s = p.stock ?? 0;
+    if (s <= 0) return 'warn';
+    if (s <= 5) return 'accent';
+    return 'primary';
   }
 
   openCreate() {
-    const ref = this.dialog.open(ProductoDialogComponent, {
-      width: '600px',
-      data: { producto: {} }
-    });
+    const ref = this.dialog.open(ProductoDialogComponent, { width: '640px' });
+    ref.afterClosed().subscribe(ok => ok && this.cargar());
+  }
 
-    ref.afterClosed().subscribe((value?: Producto) => {
-      if (!value) return;
-      this.productos.create(value).subscribe({
-        next: () => { this.snack.open('Producto creado', 'OK', { duration: 2000 }); this.load(); },
-        error: () => this.snack.open('Error al crear', 'Cerrar', { duration: 2500 })
-      });
+  openEdit(p: Producto) {
+    const ref = this.dialog.open(ProductoDialogComponent, { width: '640px', data: { producto: p } });
+    ref.afterClosed().subscribe(ok => ok && this.cargar());
+  }
+
+  verStock(p: Producto) {
+    this.productosSrv.stock(p.uid).subscribe({
+      next: (res) => {
+        this.dialog.open(MovimientoDialogComponent, {
+          width: '560px',
+          data: { productoUid: p.uid, stock: res }
+        }).afterClosed().subscribe(ok => ok && this.cargar());
+      },
+      error: (err) => this.snack.open(err?.error?.message || 'No se pudo consultar stock', 'Cerrar', { duration: 3000 })
     });
   }
 
-  openEdit(row: Producto) {
-    const ref = this.dialog.open(ProductoDialogComponent, {
-      width: '600px',
-      data: { producto: row }
-    });
-
-    ref.afterClosed().subscribe((value?: Producto) => {
-      if (!value) return;
-      // asegura que conserve el id
-      value.id = row.id;
-      this.productos.update(value).subscribe({
-        next: () => { this.snack.open('Producto actualizado', 'OK', { duration: 2000 }); this.load(); },
-        error: () => this.snack.open('Error al actualizar', 'Cerrar', { duration: 2500 })
-      });
-    });
-  }
-
-  delete(row: Producto) {
-    if (!row.id) return;
-    if (!confirm(`¿Eliminar producto #${row.id}?`)) return;
-    this.productos.delete(row.id).subscribe({
-      next: () => { this.snack.open('Producto eliminado', 'OK', { duration: 2000 }); this.load(); },
-      error: () => this.snack.open('Error al eliminar', 'Cerrar', { duration: 2500 })
+  remove(p: Producto) {
+    if (!confirm(`¿Eliminar producto "${p.nombre}"?`)) return;
+    this.productosSrv.delete(p.uid).subscribe({
+      next: () => { this.snack.open('Producto eliminado', 'OK', { duration: 1800 }); this.cargar(); },
+      error: (err) => this.snack.open(err?.error?.message || 'Error eliminando producto', 'Cerrar', { duration: 3000 })
     });
   }
 }

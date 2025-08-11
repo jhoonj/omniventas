@@ -1,11 +1,13 @@
 export interface Producto {
-  id?: number;
+  uid: string;
   nombre: string;
-  descripcion?: string;
-  tipo?: string;           // hasta 10 chars
-  precio?: number;         // numeric(10,2)
-  stock?: number;          // int
-  proveedor_id?: number;   // FK -> proveedores.id
+  descripcion?: string | null;
+  tipo?: 'lente' | 'armazon' | 'accesorio' | 'otro' | null;
+  precio: number | null;
+  proveedorUid?: string | null; // opcional
+  stock?: number;  
+
 }
 
-
+export type ProductoCreate = Omit<Producto, 'uid'>;
+export type ProductoPatch  = Partial<Omit<Producto, 'uid'>>;

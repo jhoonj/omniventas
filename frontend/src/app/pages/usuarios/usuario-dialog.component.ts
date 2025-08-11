@@ -33,7 +33,7 @@ export class UsuarioDialogComponent implements OnInit {
     this.form = this.fb.group({
       nombre: [this.data.usuario.nombre || '', Validators.required],
       email: [this.data.usuario.email || '', [Validators.required, Validators.email]],
-      contrasenaash: [''], // opcional
+      contrasenahash: [''], // opcional
       rol_id: [this.data.usuario.rol_id || null, Validators.required]
     });
 

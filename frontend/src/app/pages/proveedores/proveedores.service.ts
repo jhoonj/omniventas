@@ -1,30 +1,32 @@
-// src/app/proveedores/proveedores.service.ts
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Proveedor } from './proveedor.model';
+import { API_BASE_URL } from '../../core/api.tokens';
+import { Proveedor, ProveedorCreate, ProveedorPatch } from './proveedor.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProveedoresService {
   private http = inject(HttpClient);
-
-  // ⬅️ Ajusta este baseUrl al de tu API real (con o sin /optica)
-  private baseUrl = 'http://localhost:8080/optica/proveedores';
+  private apiBase = inject(API_BASE_URL);              // centralizado
+  private base = `${this.apiBase}/api/proveedores`;    // el service solo concatena el path
 
   list(): Observable<Proveedor[]> {
-    return this.http.get<Proveedor[]>(this.baseUrl);
+    return this.http.get<Proveedor[]>(this.base);
   }
 
-  get(id: number): Observable<Proveedor> {
-    return this.http.get<Proveedor>(`${this.baseUrl}/${id}`);
+  get(uid: string): Observable<Proveedor> {
+    return this.http.get<Proveedor>(`${this.base}/${uid}`);
   }
 
-  /** Crea o actualiza según venga o no el id */
-  save(p: Proveedor): Observable<Proveedor> {
-    return this.http.post<Proveedor>(this.baseUrl, p);
+  create(body: ProveedorCreate): Observable<Proveedor> {
+    return this.http.post<Proveedor>(this.base, body);
   }
 
-  delete(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  update(uid: string, patch: ProveedorPatch): Observable<Proveedor> {
+    return this.http.patch<Proveedor>(`${this.base}/${uid}`, patch);
+  }
+
+  delete(uid: string): Observable<void> {
+    return this.http.delete<void>(`${this.base}/${uid}`);
   }
 }

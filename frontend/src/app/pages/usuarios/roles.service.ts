@@ -9,7 +9,7 @@ export interface Rol {
 
 @Injectable({ providedIn: 'root' })
 export class RolesService {
-  private baseUrl = 'http://localhost:8080/optica/roles';
+  private baseUrl = 'http://localhost:8080/omniventas/roles';
 
   constructor(private http: HttpClient) {}
 
