@@ -1,0 +1,34 @@
+server:
+  port: 8080
+
+spring:
+  r2dbc:
+    url: r2dbc:postgresql://dpg-d28d10ripnbc739k5peg-a.ohio-postgres.render.com:5432/optica_ft6p?ssl=true
+    username: optica_ft6p_user
+    password: Dhv5s8E3esOxCWAJOe4Uo4HOE8svAPVj
+  sql:
+    init:
+     # mode: never
+      mode: always
+  webflux:
+    base-path: /omniventas
+cors:
+  allowed-origins:
+    - http://localhost:4200
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    org.springframework.r2dbc.connection.init: DEBUG
+    com.omniventas.security.jwt: DEBUG
+    org.springframework.security: TRACE
+    org.springframework.web.server : DEBUG
+
+security:
+  jwt:
+    secret: super-secreto-muy-largo-para-hs256
+    issuer: omniventas-api
+
+
