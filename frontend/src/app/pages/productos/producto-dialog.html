@@ -32,16 +32,80 @@
     </div>
 
     <mat-form-field appearance="outline" style="width:100%">
-      <mat-label>Proveedor</mat-label>
+      <mat-label>Proveedoxxxxxr</mat-label>
+
+      
       <mat-select formControlName="proveedor_id">
         <mat-option [value]="null">(Sin proveedor)</mat-option>
         <mat-option *ngFor="let pr of proveedores" [value]="pr.id">{{ pr.nombre }}</mat-option>
       </mat-select>
     </mat-form-field>
   </form>
+
+  <mat-divider class="my-4"></mat-divider>
+
+  <!-- Sección de imágenes, solo si estamos editando (tiene uid) -->
+  <div *ngIf="productoUid as uid">
+    <h3 class="text-lg font-medium mb-2">Imágenes2</h3>
+
+    <div class="flex items-end gap-3 mb-3">
+      <button mat-stroked-button (click)="fileInput.click()" [disabled]="uploading">
+        <mat-icon>upload</mat-icon> Subir imagen
+      </button>
+      <mat-slide-toggle [formControl]="principalCtrl">Marcar como principal</mat-slide-toggle>
+      <mat-form-field appearance="outline" class="flex-1">
+        <mat-label>Alt text (opcional)</mat-label>
+        <input matInput [formControl]="altTextCtrl" maxlength="200">
+        <mat-hint align="end">{{ (altTextCtrl.value || '').length }}/200</mat-hint>
+      </mat-form-field>
+      <input #fileInput type="file" accept="image/*" class="hidden" (change)="onFileSelected($event)">
+    </div>
+
+    <mat-progress-bar *ngIf="uploading || loadingImgs" mode="indeterminate"></mat-progress-bar>
+
+
+    <div style="padding:8px;background:#fff3cd;color:#664d03;border:1px solid #ffecb5;margin-bottom:8px">
+      <div>productoUid: {{ productoUid }}</div>
+      <div>imagenes: {{ imagenes?.length || 0 }}</div>
+    </div>
+
+    <!-- Grid de imágenes -->
+    <div class="grid gap-3" style="grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));">
+      <mat-card *ngFor="let img of imagenes" class="overflow-hidden">
+
+        <img [src]="svc.absApi4545(img.url) || blobSrc[img.uid]  " [alt]="img.altText || img.filename || 'imagen'"
+          (error)="onImgError(img)"
+          style="width:100%; height:200px; object-fit:contain; background:#f3f4f6; border-radius:6px;">
+
+        <mat-card-content>
+          <div class="text-sm truncate" [title]="img.filename || img.url">{{ img.filename || img.url }}</div>
+          <div class="text-xs text-gray-500">{{ img.sizeBytes | number }} bytes</div>
+          <mat-chip-set>
+            <mat-chip *ngIf="img.principal" color="primary" selected disableRipple>Principal</mat-chip>
+          </mat-chip-set>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <a mat-button [href]="img.url" target="_blank" rel="noopener">Abrir</a>
+          <button mat-button color="primary" (click)="marcarPrincipal(img)"
+            [disabled]="img.principal">Principal</button>
+          <button mat-button color="warn" (click)="eliminarImagen(img)">Eliminar</button>
+        </mat-card-actions>
+      </mat-card>
+    </div>
+  </div>
+
+
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button mat-button (click)="close()">Cancelar</button>
   <button mat-flat-button color="primary" (click)="save()" [disabled]="form.invalid">Guardar</button>
 </mat-dialog-actions>
+
+
+<img
+  [src]="getImgSrc(img)"
+  [alt]="img.altText || img.filename || 'imagen'"
+  (error)="onImgError(img)"
+  (load)="onImgLoad(img)"
+  style="width:100%; height:200px; object-fit:contain; background:#f3f4f6; border-radius:6px;">

@@ -1,3 +1,9 @@
+app:
+  media-dir: ${MEDIA_DIR:uploads}      # directorio en disco
+  media-base-url: /omniventas/media    # prefijo público
+
+
+
 server:
   port: 8080
 
@@ -6,6 +12,8 @@ spring:
     url: r2dbc:postgresql://dpg-d28d10ripnbc739k5peg-a.ohio-postgres.render.com:5432/optica_ft6p?ssl=true
     username: optica_ft6p_user
     password: Dhv5s8E3esOxCWAJOe4Uo4HOE8svAPVj
+  codec:
+    max-in-memory-size: 10MB
   sql:
     init:
      # mode: never

@@ -3,7 +3,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { forkJoin, of } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
-
+import { Observable } from 'rxjs';
 import { ProductosService } from './productos.service';
 import { ProveedoresService } from '../proveedores/proveedores.service';
 import { Producto } from './producto.model';
@@ -20,6 +20,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatChipsModule } from '@angular/material/chips';
+import { ImagenProducto } from './producto.model'; // por si falta
+
 
 
 
@@ -33,21 +35,28 @@ import { MatChipsModule } from '@angular/material/chips';
 })
 export class ProductosComponent implements OnInit {
   // añadimos la columna 'stock'
-  cols = ['nombre', 'tipo', 'precio', 'proveedor', 'stock', 'acciones'];
+  cols = ['imagen', 'nombre', 'tipo', 'precio', 'proveedor', 'stock', 'acciones'];
 
   private productosSrv = inject(ProductosService);
   private proveedoresSrv = inject(ProveedoresService);
   private dialog = inject(MatDialog);
   private snack = inject(MatSnackBar);
 
+  blobSrc: Record<string, string> = {};
+
   private _productos = signal<(Producto & { proveedorNombre?: string; stock?: number })[]>([]);
   productos = this._productos.asReadonly();
   loading = signal(false);
+
+  constructor(private svc: ProductosService) { }
 
   ngOnInit(): void {
     this.cargar();
   }
 
+  thumb$(uid: string): Observable<string | null> {
+    return this.svc.principalImagenUrl(uid);
+  }
   cargar(): void {
     this.loading.set(true);
 
@@ -123,4 +132,22 @@ export class ProductosComponent implements OnInit {
       error: (err) => this.snack.open(err?.error?.message || 'Error eliminando producto', 'Cerrar', { duration: 3000 })
     });
   }
+
+  ngOnDestroy() {
+    Object.values(this.blobSrc).forEach(u => URL.revokeObjectURL(u));
+  }
+
+
+  onImgError(img: ImagenProducto) {
+    this.svc.getImagenBlob(img.url).subscribe({
+      next: blob => {
+        // revoca anterior si existía
+        const prev = this.blobSrc[img.uid];
+        if (prev) URL.revokeObjectURL(prev);
+        this.blobSrc[img.uid] = URL.createObjectURL(blob);
+      },
+      error: err => console.warn('[IMG] blob error', err)
+    });
+  }
+
 }

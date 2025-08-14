@@ -27,7 +27,9 @@ public class SecurityConfig {
                 .cors(cors -> {})
                 .securityContextRepository(contextRepo)
                 .authorizeExchange(ex -> ex
-                        .pathMatchers("/auth/**", "/v3/api-docs/**", "/swagger-ui/**", "/actuator/health","/webjars/**","/auth/login").permitAll()
+                        .pathMatchers(HttpMethod.GET, "/api/productos/{productoUid}/imagenes/{imagenUid}/raw").permitAll()
+
+                        .pathMatchers("/api/productos/*/imagenes/**", "/v3/api-docs/**", "/swagger-ui/**", "/actuator/health","/webjars/**","/auth/login").permitAll()
                         .pathMatchers(HttpMethod.POST, "/usuarios", "/onmiventas/usuarios").hasRole("ADMIN")
                         .anyExchange().authenticated()
                 )

@@ -1,10 +1,13 @@
 package com.omniventas.producto.infrastructure;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.omniventas.producto.domain.MovimientoInventarioReq;
 import com.omniventas.producto.domain.Producto;
 import com.omniventas.producto.domain.ProductoRepository;
+import com.omniventas.producto.infrastructure.dto.ProductoRes;
 import com.omniventas.producto.domain.StockRes;
 import com.omniventas.shared.api.ApiEnvelope;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.util.StringUtils;
@@ -14,7 +17,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.Instant;
+import java.net.URI;
 import java.util.Map;
 import java.util.UUID;
 
@@ -40,70 +43,49 @@ public class ProductoRestController {
         return productos.findByUid(uid).map(ProductoRes::of);
     }
 
-    // -------- Crear (usa insert) --------
-// ProductoRestController.java
+    // -------- Crear/Actualizar (POST save) --------
     @PostMapping
-    public Mono<ResponseEntity<ApiEnvelope<ProductoRes>>> save(@RequestBody Mono<com.fasterxml.jackson.databind.JsonNode> body) {
+    public Mono<ResponseEntity<ApiEnvelope<ProductoRes>>> save(@RequestBody Mono<JsonNode> body) {
         return body.flatMap(json -> {
-            // Detecta si es create o update por presencia de uid
-            final java.util.UUID uid = json.hasNonNull("uid") ? java.util.UUID.fromString(json.get("uid").asText()) : null;
+            final UUID uid = json.hasNonNull("uid") ? UUID.fromString(json.get("uid").asText()) : null;
             final boolean isCreate = (uid == null);
 
-            // Campos opcionales (solo se actualizan si vienen)
-            final String nombre      = json.has("nombre")      ? (json.get("nombre").isNull() ? null : json.get("nombre").asText()) : null;
-            final String descripcion = json.has("descripcion") ? (json.get("descripcion").isNull() ? null : json.get("descripcion").asText()) : null;
-            final String tipo        = json.has("tipo")        ? (json.get("tipo").isNull() ? null : json.get("tipo").asText()) : null;
+            final String nombre      = optText(json, "nombre");
+            final String descripcion = optText(json, "descripcion");
+            final String tipo        = optText(json, "tipo");
+            final BigDecimal precio  = optBigDecimal(json, "precio");
 
-            final java.math.BigDecimal precio =
-                    json.has("precio") && !json.get("precio").isNull()
-                            ? new java.math.BigDecimal(json.get("precio").asText())
-                            : null;
-
-            // proveedorUid: necesitamos saber si vino o no (para no tocar si se omite)
             final boolean proveedorUidPresent = json.has("proveedorUid");
-            final java.util.UUID proveedorUid =
-                    proveedorUidPresent && !json.get("proveedorUid").isNull()
-                            ? java.util.UUID.fromString(json.get("proveedorUid").asText())
+            final UUID proveedorUid =
+                    proveedorUidPresent && json.hasNonNull("proveedorUid")
+                            ? UUID.fromString(json.get("proveedorUid").asText())
                             : null;
 
-            Mono<com.omniventas.producto.domain.Producto> op =
-                    isCreate
-                            // CREATE: no mandamos uid (lo genera Postgres con uuid_generate_v4)
-                            ? productos.insert(
-                            nombre,              // requerido (valídalo si quieres)
-                            descripcion,
-                            tipo,
-                            precio,
-                            proveedorUid         // puede ser null
-                    )
-                            // UPDATE parcial por uid: solo columnas presentes se tocan
-                            : productos.updateByUid(
-                            uid,
-                            nombre,              // si es null y no vino => no cambia
-                            descripcion,
-                            tipo,
-                            precio,
-                            proveedorUid,        // si proveedorUidPresent && null => limpia proveedor_id
-                            proveedorUidPresent
-                    );
+            Mono<Producto> op = isCreate
+                    ? productos.insert(nombre, descripcion, tipo, precio, proveedorUid)
+                    : productos.updateByUid(uid, nombre, descripcion, tipo, precio, proveedorUid, proveedorUidPresent);
 
             return op.map(p -> {
-                var res = ProductoRes.of(p);   // 👈 sin el segundo parámetro
-                return ResponseEntity
-                        .status(isCreate ? HttpStatus.CREATED : HttpStatus.OK)
-                        .body(ApiEnvelope.ok(res));
-            })
+                        var res = ProductoRes.of(p);
+                        var env = ApiEnvelope.ok(res);
 
+                        if (isCreate) {
+                            // Header Location -> /omniventas/api/productos/{uid}
+                            URI location = URI.create("/omniventas/api/productos/" + p.uid().toString());
+                            return ResponseEntity.status(HttpStatus.CREATED)
+                                    .header(HttpHeaders.LOCATION, location.toString())
+                                    .body(env);
+                        }
+                        return ResponseEntity.ok(env);
+                    })
                     .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado")));
         });
     }
 
-    // -------- Actualizar parcial (usa updateByUid) --------
-    // Acepta un PATCH genérico tipo {"nombre": "...", "precio": 123, "proveedorUid": "...."}
+    // -------- Actualizar parcial (PATCH) --------
     @PatchMapping("/{uid}")
-    public Mono<ProductoRes> actualizar(@PathVariable UUID uid,
-                                        @RequestBody Map<String, Object> patch) {
-        // Extrae campos presentes; si no vienen, quedan null y NO se actualizan.
+    public Mono<ResponseEntity<ApiEnvelope<ProductoRes>>> actualizar(@PathVariable UUID uid,
+                                                                     @RequestBody Map<String, Object> patch) {
         String nombre = asString(patch.get("nombre"));
         String descripcion = asString(patch.get("descripcion"));
         String tipo = asString(patch.get("tipo"));
@@ -113,24 +95,18 @@ public class ProductoRestController {
         UUID proveedorUid = null;
         if (proveedorUidPresent) {
             Object raw = patch.get("proveedorUid");
-            if (raw != null && StringUtils.hasText(raw.toString())
-                    && !"null".equalsIgnoreCase(raw.toString())) {
+            if (raw != null && StringUtils.hasText(raw.toString()) && !"null".equalsIgnoreCase(raw.toString())) {
                 proveedorUid = UUID.fromString(raw.toString());
-            } // si viene vacío o "null", lo dejaremos como null ⇒ set NULL en DB
+            }
         }
 
         validarUpdate(nombre, descripcion, tipo, precio);
 
-        return productos.updateByUid(
-                        uid,
-                        nombre,
-                        descripcion,
-                        tipo,
-                        precio,
-                        proveedorUid,
-                        proveedorUidPresent
-                )
-                .map(ProductoRes::of);
+        return productos.updateByUid(uid, nombre, descripcion, tipo, precio, proveedorUid, proveedorUidPresent)
+                .map(ProductoRes::of)
+                .map(ApiEnvelope::ok)
+                .map(ResponseEntity::ok)
+                .switchIfEmpty(Mono.error(new ResponseStatusException(HttpStatus.NOT_FOUND, "Producto no encontrado")));
     }
 
     // -------- Eliminar --------
@@ -146,7 +122,7 @@ public class ProductoRestController {
         return productos.stock(uid);
     }
 
-    // -------- Movimiento inventario --------
+    // -------- Movimientos de inventario --------
     @PostMapping("/{uid}/movimientos")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public Mono<Void> movimiento(@PathVariable UUID uid,
@@ -156,6 +132,16 @@ public class ProductoRestController {
 
     // ================== Helpers ==================
 
+    private static String optText(JsonNode json, String key) {
+        return json.has(key) && !json.get(key).isNull() ? json.get(key).asText() : null;
+    }
+
+    private static BigDecimal optBigDecimal(JsonNode json, String key) {
+        if (!(json.has(key) && !json.get(key).isNull())) return null;
+        try { return new BigDecimal(json.get(key).asText()); }
+        catch (Exception e) { throw new IllegalArgumentException(key + " inválido"); }
+    }
+
     private static String asString(Object o) {
         if (o == null) return null;
         var s = o.toString();
@@ -164,26 +150,8 @@ public class ProductoRestController {
 
     private static BigDecimal asBigDecimal(Object o) {
         if (o == null) return null;
-        try {
-            return (o instanceof BigDecimal bd) ? bd : new BigDecimal(o.toString());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("precio inválido");
-        }
-    }
-
-    private static void validarCreate(ProductoCreateReq req) {
-        if (!StringUtils.hasText(req.nombre()) || req.nombre().trim().length() < 2) {
-            throw new IllegalArgumentException("nombre requerido (mín 2 caracteres)");
-        }
-        if (req.precio() == null || req.precio().signum() < 0) {
-            throw new IllegalArgumentException("precio requerido y ≥ 0");
-        }
-        if (req.precio().scale() > 2) {
-            throw new IllegalArgumentException("precio admite máximo 2 decimales");
-        }
-        if (req.tipo() != null && req.tipo().length() > 10) {
-            throw new IllegalArgumentException("tipo supera longitud máxima");
-        }
+        try { return (o instanceof BigDecimal bd) ? bd : new BigDecimal(o.toString()); }
+        catch (Exception e) { throw new IllegalArgumentException("precio inválido"); }
     }
 
     private static void validarUpdate(String nombre, String descripcion, String tipo, BigDecimal precio) {
@@ -196,41 +164,6 @@ public class ProductoRestController {
         }
         if (tipo != null && tipo.length() > 10) {
             throw new IllegalArgumentException("tipo supera longitud máxima");
-        }
-    }
-
-    // ================== DTOs ==================
-
-    public record ProductoCreateReq(
-            String nombre,
-            String descripcion,
-            String tipo,
-            BigDecimal precio,
-            UUID proveedorUid
-    ) {}
-
-    // Respuesta. Ajusta a tu clase real si ya la tienes en otro paquete.
-    public record ProductoRes(
-            UUID uid,
-            String nombre,
-            String descripcion,
-            String tipo,
-            BigDecimal precio,
-            Long proveedorId,
-            Instant updatedAt,
-            Integer stock
-    ) {
-        public static ProductoRes of(Producto p) {
-            return new ProductoRes(
-                    p.uid(),
-                    p.nombre(),
-                    p.descripcion(),
-                    p.tipo(),
-                    p.precio(),
-                    p.proveedorId(),
-                    p.updatedAt(),
-                    p.stock()
-            );
         }
     }
 }

@@ -27,9 +27,17 @@ public class R2dbcProductoAdapter implements ProductoRepository {
     }
 
     private static final String SELECT_BASE = """
-    SELECT p.id, p.uid, p.nombre, p.descripcion, p.tipo, p.precio, p.proveedor_id, p.stock
-      FROM public.productos p
-    """;
+  SELECT p.id, p.uid, p.nombre, p.descripcion, p.tipo, p.precio, p.proveedor_id, p.stock,
+         (
+           SELECT i.url
+             FROM public.producto_imagenes i
+            WHERE i.producto_id = p.id AND i.principal = TRUE
+            ORDER BY i.id DESC
+            LIMIT 1
+         ) AS imagen_url
+    FROM public.productos p
+""";
+
 
     private static final Set<String> TIPOS_VALIDOS = Set.of(
             "ingreso", "salida", "reserva", "ajuste", "transferencia_in", "transferencia_out"
@@ -46,6 +54,7 @@ public class R2dbcProductoAdapter implements ProductoRepository {
                 row.get("proveedor_id", Long.class),
                 null,
                 null,
+                row.get("imagen_url", String.class),
                 row.get("stock", Integer.class)
         );
     }
@@ -125,7 +134,7 @@ public class R2dbcProductoAdapter implements ProductoRepository {
             String sql = """
             INSERT INTO public.productos (%s)
             VALUES (%s)
-            RETURNING id, uid, nombre, descripcion, tipo, precio, proveedor_id, stock
+            RETURNING id, uid, nombre, descripcion, tipo, precio, proveedor_id, stock,imagen_url
             """.formatted(String.join(", ", cols), String.join(", ", vals));
 
             var spec = db.sql(sql);
@@ -199,7 +208,7 @@ public class R2dbcProductoAdapter implements ProductoRepository {
             UPDATE public.productos
                SET %s
              WHERE uid = :uid
-            RETURNING id, uid, nombre, descripcion, tipo, precio, proveedor_id, stock
+            RETURNING id, uid, nombre, descripcion, tipo, precio, proveedor_id, stock,imagen_url
             """.formatted(String.join(", ", sets));
 
             var spec = db.sql(sql).bind("uid", uid);
@@ -283,6 +292,54 @@ public class R2dbcProductoAdapter implements ProductoRepository {
         });
     }
 
+
+    public Mono<Void> clearPrincipal(Long productoId) {
+        return db.sql("UPDATE public.producto_imagenes SET principal = FALSE WHERE producto_id = :pid")
+                .bind("pid", productoId).fetch().rowsUpdated().then();
+    }
+
+    public Mono<Void> insertImagen(Long productoId, String filename, String contentType,
+                                   long size, String url, boolean principal, int orden) {
+        String sql = """
+    INSERT INTO public.producto_imagenes (producto_id, filename, content_type, size_bytes, url, principal, orden)
+    VALUES (:pid, :fn, :ct, :sz, :url, :pr, :ord)
+  """;
+        var spec = db.sql(sql)
+                .bind("pid", productoId)
+                .bind("fn", filename)
+                .bind("ct", contentType)
+                .bind("sz", size)
+                .bind("url", url)
+                .bind("pr", principal)
+                .bind("ord", orden);
+        return spec.fetch().rowsUpdated().then();
+    }
+
+    public Flux<Map<String, Object>> listImagenes(UUID productoUid) {
+        return resolveProductoId(productoUid).flatMapMany(pid ->
+                db.sql("""
+      SELECT uid, url, filename, principal, orden, size_bytes, content_type, created_at
+        FROM public.producto_imagenes
+       WHERE producto_id = :pid
+       ORDER BY principal DESC, orden ASC, id ASC
+    """).bind("pid", pid).map((row, meta) -> {
+                    // Usar un mapa mutable para forzar V = Object y evitar tipos intersección de Map.of
+                    Map<String, Object> m = new LinkedHashMap<>();
+                    m.put("uid", row.get("uid", java.util.UUID.class));
+                    m.put("url", row.get("url", String.class));
+                    m.put("filename", row.get("filename", String.class));
+                    m.put("principal", row.get("principal", Boolean.class));
+                    m.put("orden", row.get("orden", Integer.class));
+                    m.put("sizeBytes", row.get("size_bytes", Long.class));
+                    m.put("contentType", row.get("content_type", String.class));
+                    m.put("createdAt", row.get("created_at", java.time.Instant.class));
+                    return m;
+                }).all()
+        );
+    }
+
+
+
     /** Actualiza productos.stock sin almacenes.
      *  - ingreso/salida/reserva/transfer_*: suma delta
      *  - ajuste: pone el stock al valor indicado (abs)
@@ -345,4 +402,6 @@ public class R2dbcProductoAdapter implements ProductoRepository {
     private record AlmacenSaldo(UUID almacenId, int saldo) {}
 
     public DatabaseClient db() { return db; }
+
+
 }
