@@ -1,0 +1,136 @@
+<nav class="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-slate-100 relative">
+  <div class="max-w-7xl mx-auto px-4 h-16"></div>
+
+  <div class="nav-actions-abs">
+    <button mat-flat-button color="primary" class="rounded-xl cta-user" (click)="goToUserMenu()">
+      <mat-icon class="mr-2">login</mat-icon> Ingresar / Mi cuenta
+    </button>
+    <button mat-icon-button class="rounded-xl border border-slate-200" (click)="cart.open()" aria-label="Abrir carrito">
+      <mat-icon>shopping_cart</mat-icon>
+    </button>
+  </div>
+</nav>
+
+<div class="min-h-screen bg-slate-50">
+  <!-- TOP BAR (sin buscador, CTA usuario prominente) -->
+
+
+
+  <!-- FILTERS (incluye buscador) -->
+  <section class="max-w-7xl mx-auto px-4 py-4">
+    <div class="filter-card">
+
+
+      <!-- Row 2: pill categories + precios -->
+      <div class="row gap-3">
+        <div class="pill-scroll">
+          <button class="pill" [class.active]="formSig().tipo==='todos'" (click)="selectTipo('todos')">Todas</button>
+          <button class="pill" *ngFor="let t of tipos()" [class.active]="formSig().tipo===t" (click)="selectTipo(t)">{{
+            t }}</button>
+        </div>
+
+        <div class="price-inputs">
+          <mat-form-field appearance="outline" class="w-32">
+            <mat-label>Min</mat-label>
+            <input matInput type="number" [formControl]="form.controls.precioMin" (keyup.enter)="pageIndex.set(0)">
+          </mat-form-field>
+          <mat-form-field appearance="outline" class="w-32">
+            <mat-label>Max</mat-label>
+            <input matInput type="number" [formControl]="form.controls.precioMax" (keyup.enter)="pageIndex.set(0)">
+          </mat-form-field>
+          <button mat-stroked-button class="rounded-xl" (click)="allProducts()">
+            <mat-icon class="mr-1">clear_all</mat-icon> Limpiar
+          </button>
+          <mat-form-field appearance="outline" class="w-full md:w-[520px]">
+            <mat-label>Buscar productos</mat-label>
+            <input matInput placeholder="Nombre o descripción" [formControl]="form.controls.q"
+              (keyup.enter)="pageIndex.set(0)" />
+            <button *ngIf="form.controls.q.value" mat-icon-button matSuffix (click)="clearQ()" aria-label="Limpiar">
+              <mat-icon>close</mat-icon>
+            </button>
+            <button mat-icon-button matSuffix (click)="pageIndex.set(0)" aria-label="Buscar">
+              <mat-icon>search</mat-icon>
+            </button>
+          </mat-form-field>
+
+          <mat-button-toggle-group [value]="formSig().sort" (change)="setSort($event.value)" class="segmented">
+            <mat-button-toggle value="recientes">Recientes</mat-button-toggle>
+            <mat-button-toggle value="precio-asc">Precio ↑</mat-button-toggle>
+            <mat-button-toggle value="precio-desc">Precio ↓</mat-button-toggle>
+            <mat-button-toggle value="relevancia">Relevancia</mat-button-toggle>
+          </mat-button-toggle-group>
+        </div>
+      </div>
+
+      <!-- Row 3: chips activos -->
+      <div class="row" *ngIf="chips().length">
+        <mat-chip-listbox>
+          <mat-chip-option *ngFor="let c of chips()" (removed)="clearChip(c.key)" removable>
+            {{ c.label }}
+            <button matChipRemove aria-label="Quitar">
+              <mat-icon>cancel</mat-icon>
+            </button>
+          </mat-chip-option>
+        </mat-chip-listbox>
+      </div>
+    </div>
+  </section>
+
+  <!-- GRID centrado -->
+  <section class="center-wrap">
+    <ng-container *ngIf="!error(); else errorTpl">
+      <ng-container *ngIf="!cargando(); else skeletonTpl">
+        <div *ngIf="length; else emptyTpl" class="products-grid">
+          <article *ngFor="let p of pageItems()" class="product-card">
+            <div class="product-image">
+              <img [src]="img(p.uid) || 'assets/placeholder-product.svg'" [alt]="p.nombre" loading="lazy" />
+              <div class="badge-tipo" *ngIf="p.tipo">{{ p.tipo }}</div>
+              <div class="price-sticker">{{ p.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+            </div>
+            <div class="product-info">
+              <h3 class="name line-clamp-2">{{ p.nombre }}</h3>
+              <p class="desc line-clamp-2">{{ p.descripcion || '—' }}</p>
+              <div class="actions">
+                <button mat-mini-fab color="primary" aria-label="Agregar al carrito" (click)="addToCart(p)">
+                  <mat-icon>add_shopping_cart</mat-icon>
+                </button>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="mt-6 flex justify-center">
+          <mat-paginator [length]="length" [pageIndex]="pageIndex()" [pageSize]="pageSize()"
+            [pageSizeOptions]="[8, 12, 24, 48]" (page)="onPage($event)">
+          </mat-paginator>
+        </div>
+      </ng-container>
+    </ng-container>
+
+    <ng-template #skeletonTpl>
+      <div class="products-grid">
+        <div *ngFor="let i of [0,1,2,3,4,5,6,7,8,9,10,11]" class="product-card skeleton">
+          <div class="product-image"></div>
+          <div class="product-info">
+            <div class="skeleton-line w-3/4"></div>
+            <div class="skeleton-line w-1/2"></div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+
+    <ng-template #emptyTpl>
+      <div class="text-center py-20 bg-white rounded-2xl border border-slate-200">
+        <mat-icon class="text-5xl mb-2">inventory_2</mat-icon>
+        <p class="text-slate-600">No encontramos productos con los filtros actuales.</p>
+      </div>
+    </ng-template>
+
+    <ng-template #errorTpl>
+      <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">
+        {{ error() }}
+      </div>
+    </ng-template>
+  </section>
+</div>
+<app-mini-checkout></app-mini-checkout>

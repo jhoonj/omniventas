@@ -1,0 +1,76 @@
+<div class="container mx-auto px-4 py-6" *ngIf="!loading(); else skel">
+  <ng-container *ngIf="!error(); else errorTpl">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <!-- Galería -->
+      <div class="lg:col-span-7 bg-white rounded-2xl p-4 shadow">
+        <div class="aspect-[4/3] bg-gray-50 rounded-xl border flex items-center justify-center overflow-hidden">
+          <img #mainImg [src]="selectedUrl()" alt="imagen principal" class="max-h-full object-contain w-full"
+               (error)="hideImg(mainImg)"/>
+        </div>
+
+        <div class="mt-3 flex gap-3 overflow-x-auto">
+          <button *ngFor="let img of imagenes()"
+                  class="w-20 h-20 rounded-lg border bg-gray-50 overflow-hidden ring-2 ring-transparent hover:ring-blue-400"
+                  (click)="select(img)">
+            <img #imgEl [src]="img.url" class="w-full h-full object-contain"
+                 (error)="hideImg(mainImg)"/>
+          </button>
+        </div>
+      </div>
+
+      <!-- Panel de compra (estilo MercadoLibre) -->
+      <div class="lg:col-span-5 space-y-4">
+        <div class="bg-white rounded-2xl p-5 shadow">
+          <h1 class="text-2xl font-semibold leading-tight">{{ producto()?.nombre }}</h1>
+          <div class="text-sm text-gray-500 mt-1">Actualizado {{ producto()?.updatedAt | date:'dd/MM/yy' }}</div>
+
+          <div class="mt-4 text-3xl font-bold">{{ producto()?.precio | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+
+          <div class="mt-2 text-sm text-emerald-700 bg-emerald-50 inline-flex items-center gap-2 px-2 py-1 rounded">
+            <mat-icon class="text-emerald-700">local_shipping</mat-icon> Envío a todo el país
+          </div>
+
+          <div class="mt-4 flex items-center gap-3">
+            <div class="text-sm text-gray-600">Cantidad</div>
+            <div class="flex items-center border rounded-lg">
+              <button mat-icon-button (click)="dec()"><mat-icon>remove</mat-icon></button>
+              <input class="w-14 text-center outline-none" type="number" min="1" max="99" [ngModel]="qty()" (ngModelChange)="qty.set($event)" />
+              <button mat-icon-button (click)="inc()"><mat-icon>add</mat-icon></button>
+            </div>
+            <div class="text-xs text-gray-500" *ngIf="producto()?.stock as s">({{ s }} disponibles)</div>
+          </div>
+
+          <div class="mt-5 grid grid-cols-1 gap-3">
+            <button mat-flat-button color="primary" class="h-12 rounded-xl" (click)="addToCart()">
+              <mat-icon>shopping_cart</mat-icon> Agregar al carrito
+            </button>
+            <button mat-stroked-button class="h-11 rounded-xl" (click)="addToCart()">Comprar ahora</button>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl p-5 shadow text-sm text-gray-600">
+          <div class="font-medium text-gray-900 mb-2">Descripción</div>
+          <p class="whitespace-pre-line">{{ producto()?.descripcion }}</p>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>
+
+<ng-template #skel>
+  <div class="container mx-auto px-4 py-6">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div class="lg:col-span-7 bg-white rounded-2xl p-4 shadow h-96 animate-pulse"></div>
+      <div class="lg:col-span-5 space-y-4">
+        <div class="bg-white rounded-2xl p-5 shadow h-72 animate-pulse"></div>
+        <div class="bg-white rounded-2xl p-5 shadow h-48 animate-pulse"></div>
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<ng-template #errorTpl>
+  <div class="bg-red-50 border border-red-200 text-red-700 p-4 rounded-xl">
+    {{ error() }}
+  </div>
+</ng-template>

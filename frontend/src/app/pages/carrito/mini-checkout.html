@@ -1,0 +1,50 @@
+<!-- src/app/pages/carrito/mini-checkout.html -->
+<div class="backdrop" [class.show]="cart.opened()" (click)="close()"></div>
+
+<aside class="panel" [class.show]="cart.opened()" (click)="$event.stopPropagation()">
+  <header class="head">
+    <div class="title">
+      <mat-icon>shopping_cart</mat-icon>
+      <span>Tu carrito ({{ items().length }})</span>
+    </div>
+    <button mat-icon-button (click)="close()"><mat-icon>close</mat-icon></button>
+  </header>
+
+  <section class="body" *ngIf="items().length; else emptyTpl">
+    <div class="entry" *ngFor="let it of items()">
+      <div class="thumb">
+        <img [src]="resolveImg(it.producto)" alt="" />
+      </div>
+      <div class="meta">
+        <div class="name">{{ it.producto?.nombre }}</div>
+        <div class="price">{{ (it.producto?.precio || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="qty">
+          <button mat-mini-fab (click)="dec(it.producto?.uid!, it.qty)"><mat-icon>remove</mat-icon></button>
+          <span>{{ it.qty }}</span>
+          <button mat-mini-fab color="primary" (click)="inc(it.producto?.uid!, it.qty)"><mat-icon>add</mat-icon></button>
+        </div>
+      </div>
+      <button mat-icon-button class="remove" (click)="remove(it.producto?.uid!)">
+        <mat-icon>delete</mat-icon>
+      </button>
+    </div>
+  </section>
+
+  <ng-template #emptyTpl>
+    <div class="empty">
+      <mat-icon class="ico">shopping_bag</mat-icon>
+      <p>Tu carrito está vacío</p>
+    </div>
+  </ng-template>
+
+  <footer class="foot">
+    <div class="totals">
+      <span>Total</span>
+      <strong>{{ total() | currency:'COP':'symbol-narrow':'1.0-0' }}</strong>
+    </div>
+    <div class="actions">
+      <button mat-stroked-button (click)="clear()">Vaciar</button>
+      <button mat-flat-button color="primary">Pagar</button>
+    </div>
+  </footer>
+</aside>

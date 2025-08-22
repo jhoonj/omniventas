@@ -1,0 +1,28 @@
+/* src/app/pages/carrito/mini-checkout.scss (z-index bump) */
+:host { display: block; }
+
+.backdrop { position: fixed; inset: 0; background: rgba(2, 6, 23, .35); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 2000; }
+.backdrop.show { opacity: 1; pointer-events: auto; }
+
+.panel { position: fixed; top: 0; right: 0; bottom: 0; width: min(420px, 100%); background: #fff; border-left: 1px solid #e2e8f0;
+  transform: translateX(100%); transition: transform .25s ease; z-index: 2001; display: grid; grid-template-rows: auto 1fr auto; }
+.panel.show { transform: translateX(0); }
+
+.head { display: flex; align-items: center; justify-content: space-between; padding: .75rem 1rem; border-bottom: 1px solid #e2e8f0; }
+.head .title { display: flex; align-items: center; gap: .5rem; font-weight: 700; }
+
+.body { padding: .5rem; overflow-y: auto; }
+.entry { display: grid; grid-template-columns: 64px 1fr auto; gap: .5rem; align-items: center; border-bottom: 1px solid #e2e8f0; padding: .5rem 0; }
+.thumb { width: 64px; height: 64px; background: #f8fafc; border-radius: .5rem; display: grid; place-items: center; overflow: hidden; }
+.thumb img { max-width: 100%; max-height: 100%; object-fit: contain; }
+.meta .name { font-weight: 600; }
+.meta .price { color: #334155; font-size: .9rem; }
+.meta .qty { display: flex; align-items: center; gap: .5rem; margin-top: .25rem; }
+.remove { opacity: .7; }
+
+.empty { padding: 2rem; text-align: center; color: #64748b; }
+.empty .ico { font-size: 48px; display: block; margin: 0 auto .5rem; }
+
+.foot { border-top: 1px solid #e2e8f0; padding: .75rem 1rem; display: grid; gap: .5rem; }
+.totals { display: flex; align-items: baseline; justify-content: space-between; }
+.actions { display: flex; gap: .5rem; justify-content: flex-end; }

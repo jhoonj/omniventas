@@ -1,0 +1,5 @@
+<!-- src/app/pages/catalogo/catalogo.html (extracto relevante al final) -->
+<!-- ... tu layout / filtros / grid existente ... -->
+
+<!-- Montamos el mini-checkout en esta página -->
+<app-mini-checkout></app-mini-checkout>

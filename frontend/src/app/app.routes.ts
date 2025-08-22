@@ -7,17 +7,37 @@ import { EnviosComponent } from './pages/envios/envios';
 import { ClientesComponent } from './pages/clientes/clientes.component';
 import { UsuariosComponent } from './pages/usuarios/usuarios.component';
 import { ProveedoresComponent } from './pages/proveedores/proveedores.component';
+import { MiniCheckoutComponent } from './pages/carrito/mini-checkout.component';
 import { LoginComponent } from './pages/login/login';
+import { CatalogoComponent } from './pages/catalogo/catalogo.component';
+import { ProductoDetalleComponent } from './pages/producto-detalle/producto-detalle.component';
+import { AuthGuard } from './core/auth/auth.guard';
+import { L } from '@angular/cdk/keycodes';
 
 export const routes: Routes = [
-  { path: '', component: LoginComponent },
-  { path: 'inicio', component: InicioComponent },
-  { path: 'productos', component: ProductosComponent },
+
+
+    { path: '', redirectTo: 'catalogo', pathMatch: 'full' },
+
+  { path: 'catalogo', component: CatalogoComponent },
   { path: 'login', component: LoginComponent },
-  { path: 'formulas', component: FormulasComponent },
-  { path: 'pedidos', component: PedidosComponent },
-  { path: 'envios', component: EnviosComponent },
-  { path: 'clientes', component: ClientesComponent },
-  { path: 'usuarios', component: UsuariosComponent },
-  { path: 'proveedores', component: ProveedoresComponent }
+ { path: 'Carrito', component: MiniCheckoutComponent },
+  { path: 'producto/:uid', component: ProductoDetalleComponent },
+
+
+  // Protegidas (requieren login)
+  { path: 'inicio', component: InicioComponent, canActivate: [AuthGuard] },
+  { path: 'productos', component: ProductosComponent, canActivate: [AuthGuard] },
+  { path: 'formulas', component: FormulasComponent, canActivate: [AuthGuard] },
+  { path: 'pedidos', component: PedidosComponent, canActivate: [AuthGuard] },
+  { path: 'envios', component: EnviosComponent, canActivate: [AuthGuard] },
+  { path: 'clientes', component: ClientesComponent, canActivate: [AuthGuard] },
+  { path: 'usuarios', component: UsuariosComponent, canActivate: [AuthGuard] },
+  { path: 'proveedores', component: ProveedoresComponent, canActivate: [AuthGuard] },
+
+
+  
+  { path: '**', redirectTo: 'catalogo' },
+
+
 ];
