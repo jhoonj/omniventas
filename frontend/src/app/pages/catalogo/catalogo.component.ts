@@ -13,6 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDividerModule } from '@angular/material/divider'; // 👈 AÑADE ESTA LÍNEA
 import { Subscription } from 'rxjs';
 import { startWith, debounceTime } from 'rxjs/operators';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -20,6 +21,8 @@ import { CatalogoService } from './catalogo.service';
 import { Producto, ImagenProducto } from './models';
 import { CartService } from '../carrito/cart.service';
 import { MiniCheckoutComponent } from '../carrito/mini-checkout.component';
+
+import { RouterLink } from '@angular/router';
 
 type SortKey = 'recientes' | 'precio-asc' | 'precio-desc' | 'relevancia';
 
@@ -31,6 +34,7 @@ type SortKey = 'recientes' | 'precio-asc' | 'precio-desc' | 'relevancia';
     MatFormFieldModule, MatInputModule, MatSelectModule,
     MatIconModule, MatButtonModule, MatButtonToggleModule, MatChipsModule,
     MatPaginatorModule, MatProgressSpinnerModule, MatSnackBarModule,
+    MatDividerModule, // 👈 AÑADE EL MÓDULO AQUÍ
     CurrencyPipe, MiniCheckoutComponent
   ],
   templateUrl: './catalogo.html',
@@ -42,7 +46,7 @@ export class CatalogoComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private snack = inject(MatSnackBar);
   cart = inject(CartService);
-
+  showFilters = false;
   goToUserMenu(){ this.router.navigateByUrl('/login'); }
 
   cargando = signal<boolean>(true);

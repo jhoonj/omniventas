@@ -54,7 +54,7 @@ public class R2dbcProductoAdapter implements ProductoRepository {
                 row.get("proveedor_id", Long.class),
                 null,
                 null,
-                row.get("imagen_url", String.class),
+        
                 row.get("stock", Integer.class)
         );
     }
@@ -134,7 +134,7 @@ public class R2dbcProductoAdapter implements ProductoRepository {
             String sql = """
             INSERT INTO public.productos (%s)
             VALUES (%s)
-            RETURNING id, uid, nombre, descripcion, tipo, precio, proveedor_id, stock,imagen_url
+            RETURNING id, uid, nombre, descripcion, tipo, precio, proveedor_id, stock
             """.formatted(String.join(", ", cols), String.join(", ", vals));
 
             var spec = db.sql(sql);
@@ -208,7 +208,7 @@ public class R2dbcProductoAdapter implements ProductoRepository {
             UPDATE public.productos
                SET %s
              WHERE uid = :uid
-            RETURNING id, uid, nombre, descripcion, tipo, precio, proveedor_id, stock,imagen_url
+            RETURNING id, uid, nombre, descripcion, tipo, precio, proveedor_id, stock
             """.formatted(String.join(", ", sets));
 
             var spec = db.sql(sql).bind("uid", uid);

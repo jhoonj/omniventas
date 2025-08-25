@@ -54,18 +54,11 @@ import {
           <mat-error *ngIf="form.controls.cantidad.hasError('min')">Debe ser ≥ 1.</mat-error>
         </mat-form-field>
 
-<mat-form-field appearance="outline">
-  <mat-label>Nota (opcional)</mat-label>
-  <textarea
-    matInput
-    formControlName="nota"
-    rows="3"
-    maxlength="120"
-    autocomplete="off"
-  ></textarea>
-  <mat-hint align="end">{{ form.controls.nota.value?.length || 0 }}/120</mat-hint>
-</mat-form-field>
-
+        <mat-form-field class="w-full">
+          <mat-label>Nota (opcional)</mat-label>
+          <textarea matInput cdkTextareaAutosize formControlName="nota" rows="2"></textarea>
+          <mat-hint align="end">{{ form.controls.nota.value.length || 0 }}/120</mat-hint>
+        </mat-form-field>
 
         <mat-dialog-actions align="end" class="mt-2">
           <button mat-button type="button" (click)="close()" [disabled]="saving()">Cancelar</button>

@@ -46,6 +46,7 @@ public class ProductoRestController {
     // -------- Crear/Actualizar (POST save) --------
     @PostMapping
     public Mono<ResponseEntity<ApiEnvelope<ProductoRes>>> save(@RequestBody Mono<JsonNode> body) {
+        System.out.println(body);
         return body.flatMap(json -> {
             final UUID uid = json.hasNonNull("uid") ? UUID.fromString(json.get("uid").asText()) : null;
             final boolean isCreate = (uid == null);

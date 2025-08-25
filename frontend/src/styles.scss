@@ -1,5 +1,6 @@
 @use '@angular/material' as mat;
 
+/* ================= Material Theme ================= */
 html {
   @include mat.theme((
     color: (
@@ -11,21 +12,153 @@ html {
   ));
 }
 
-body {
-  // Default the application to a light color theme.
-  color-scheme: light;
+/* ================= Base ================= */
+:root{
+  --bg-page: #F6F8FC; /* fondo claro recomendado */
+}
 
-  // Set a default background, font and text colors using Angular Material's system variables.
-  background-color: var(--mat-sys-surface);
+html, body{
+  height: 100%;
+  margin: 0;
+}
+
+body{
+  color-scheme: light;
+  background: var(--bg-page);
   color: var(--mat-sys-on-surface);
   font: var(--mat-sys-body-medium);
-
-  // Reset the user agent margin.
-  margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
 
-// Altura completa para toda la app
-html, body {
-  height: 100%;
+/* Seguridad ante cualquier desborde horizontal (sin cortar scroll vertical) */
+html, body { overflow-x: clip; }
+
+/* =========================================================
+   HERO (banner superior) — versión única, sin hacks de 100vw
+   ========================================================= */
+.hero-bleed{
+  width: 100%;         /* ocupa el ancho del viewport, sin 100vw */
+  margin: 0;           /* sin margin-inline calc(...) */
+  color: #fff;
+  background: linear-gradient(135deg, #46B5FF 0%, #6A5AF9 100%);
+  padding: 24px 0 32px;               /* alto del banner */
+
+  box-shadow: 0 8px 28px rgba(2,6,23,.10);
+  overflow: hidden;                   /* recorta bien las esquinas */
+  position: relative;
+  z-index: 0;
 }
+
+/* Contenido interno: ocupa todo el ancho y alinea a la derecha */
+.hero-bleed .hero-inner{
+  max-width: none !important;   /* elimina límites anteriores (1120px, etc.) */
+  width: 100% !important;
+  display: flex !important;     /* fuerza flex aunque antes fuese grid */
+  justify-content: flex-end;    /* 👈 CTAs a la derecha del banner */
+  align-items: center;
+  padding: 0 16px;              /* respiración lateral sin generar scroll */
+}
+
+/* Bloque de botones dentro del hero */
+.hero-bleed .hero-ctas{
+  
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Opcional: estilos suaves para CTAs del hero sin afectar el resto */
+.hero-bleed .hero-ctas .mat-mdc-button-base{
+
+  box-shadow: 0 6px 16px rgba(2,6,23,.12);
+}
+
+/* ================= (Opcional) texto si usas títulos/subtítulos en el hero ================= */
+.hero-title{
+  margin: 0 0 6px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.12;
+  font-size: clamp(22px, 2.2vw + .6rem, 32px);
+}
+.hero-sub{
+  margin: 0 0 12px;
+  opacity: .96;
+  max-width: 56ch;
+}
+
+/* contenedor de página consistente */
+*, *::before, *::after { box-sizing: border-box; }
+
+/* el banner mantiene el fondo de lado a lado */
+.hero-bleed{
+  width: 100%;
+  margin: 0;
+  background: linear-gradient(135deg, #46B5FF 0%, #6A5AF9 100%);
+  color: #fff;
+  padding: 24px 0 32px;     /* padding vertical (el lateral lo damos abajo) */
+
+  box-shadow: 0 8px 28px rgba(2,6,23,.10);
+  overflow: hidden;
+}
+
+/* ⬇️  AQUÍ está el cambio clave: hero-inner vuelve a estar contenido */
+.hero-bleed > .hero-inner{
+/* alinéalo con tu grid (ajusta a 1200 si prefieres) */
+  margin-inline: auto !important;   /* centrado */
+  width: 100% !important;
+  padding-inline: 16px !important;  /* respiración lateral segura */
+  display: flex !important;
+  justify-content: flex-end;        /* botones a la derecha */
+  align-items: center;
+}
+
+/* los dos botones juntos */
+.hero-bleed .hero-ctas{
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+
+/* 1) Gutters y límites fluidos */
+:root{
+  --gutter: clamp(16px, 4vw, 48px);   /* margen lateral que crece con el viewport */
+  --container-max: 1280px;            /* límite superior opcional para pantallas muy grandes */
+  --cta-guard: 6ch;                   /* extra de aire a la derecha (relativo al texto) */
+}
+
+/* 2) El fondo del hero sigue ocupando todo el ancho, sin 100vw */
+.hero-bleed{
+  width: 100%;
+  margin: 0;
+  background: linear-gradient(135deg, #46B5FF 0%, #6A5AF9 100%);
+  color: #fff;
+  padding: 24px 0 32px;               /* vertical */
+
+  box-shadow: 0 8px 28px rgba(2,6,23,.10);
+  overflow: hidden;
+}
+
+/* 3) Contenido del hero: ancho FLUIDO sin desbordar */
+.hero-bleed > .hero-inner{
+  /* usa el 100% menos los gutters; y nunca excede un máximo sano */
+  width: min(calc(100% - 2*var(--gutter)), var(--container-max));
+  margin-inline: auto;
+  display: flex;
+  justify-content: flex-end;          /* CTAs a la derecha */
+  align-items: center;
+  /* colchón lateral: gutter + un extra relativo al texto de los botones */
+  padding-inline: var(--gutter);
+  padding-right: calc(var(--gutter) + var(--cta-guard));
+  box-sizing: border-box;             /* padding no suma ancho extra */
+}
+
+/* 4) Botones juntos y alineados */
+.hero-bleed .hero-ctas{ display:flex; align-items:center; gap:12px; }
+
+
+::ng-deep .mat-mdc-form-field {
+  height: 11px !important;
+}
+

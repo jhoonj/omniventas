@@ -14,10 +14,9 @@ public record Producto(
         Long proveedorId,     // FK a proveedores.id (opcional)
         Instant createdAt,
         Instant updatedAt,
-        String imagen_url,
         Integer stock
 ) {
     public Producto withIds(Long id, UUID uid) {
-        return new Producto(id, uid, nombre, descripcion, tipo, precio, proveedorId, createdAt, updatedAt,imagen_url, stock);
+        return new Producto(id, uid, nombre, descripcion, tipo, precio, proveedorId, createdAt, updatedAt, stock);
     }
 }

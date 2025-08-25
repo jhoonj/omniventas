@@ -16,15 +16,15 @@
         <img [src]="resolveImg(it.producto)" alt="" />
       </div>
       <div class="meta">
-        <div class="name">{{ it.producto?.nombre }}</div>
-        <div class="price">{{ (it.producto?.precio || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
+        <div class="name">{{ it.producto.nombre }}</div>
+        <div class="price">{{ (it.producto.precio || 0) | currency:'COP':'symbol-narrow':'1.0-0' }}</div>
         <div class="qty">
-          <button mat-mini-fab (click)="dec(it.producto?.uid!, it.qty)"><mat-icon>remove</mat-icon></button>
+          <button mat-mini-fab (click)="dec(it.producto.uid!, it.qty)"><mat-icon>remove</mat-icon></button>
           <span>{{ it.qty }}</span>
-          <button mat-mini-fab color="primary" (click)="inc(it.producto?.uid!, it.qty)"><mat-icon>add</mat-icon></button>
+          <button mat-mini-fab color="primary" (click)="inc(it.producto.uid!, it.qty)"><mat-icon>add</mat-icon></button>
         </div>
       </div>
-      <button mat-icon-button class="remove" (click)="remove(it.producto?.uid!)">
+      <button mat-icon-button class="remove" (click)="remove(it.producto.uid!)">
         <mat-icon>delete</mat-icon>
       </button>
     </div>

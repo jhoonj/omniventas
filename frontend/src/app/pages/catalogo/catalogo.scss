@@ -1,69 +1,113 @@
+@use '@angular/material' as mat;
+
 :host { display: block; }
 
-/* CTA usuario más llamativa */
-.cta-user {
-  font-weight: 700;
-  box-shadow: 0 8px 18px rgba(59,130,246,.25);
-}
+/* =================================================================
+   ESTILOS PARA LA BARRA DE FILTROS SUPERIOR (NAV)
+   ================================================================= */
 
-/* Wrap para centrar el mosaico */
-.center-wrap {
-  max-width: 1200px;
-  margin-inline: auto;
-  padding-inline: 0.5rem;
-}
-
-/* Tarjeta de filtros */
-.filter-card {
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 1rem;
-  padding: .75rem;
+/* Contenedor principal de la barra de filtros */
+.nav-actions-abs {
+  height: 64px;
   display: flex;
-  flex-direction: column;
-  gap: .75rem;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 0 16px;
 }
-.filter-card .row { display: flex; align-items: center; gap: .75rem; flex-wrap: wrap; }
-.filter-card .row.justify-between { justify-content: space-between; }
-.segmented ::ng-deep .mat-button-toggle-group { border-radius: .75rem; overflow: hidden; }
 
-/* Pills de categorías (scroll horizontal) */
-.pill-scroll {
+/* Títulos de sección en la barra superior (Precio, Buscar, etc.) */
+.nav-actions-abs > h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0;
+}
+
+/* Contenedor de cada grupo de inputs */
+.nav-actions-abs .filter-row {
   display: flex;
-  gap: .5rem;
-  overflow-x: auto;
-  padding-bottom: .25rem;
-  scrollbar-width: none;
+  align-items: center;
 }
-.pill-scroll::-webkit-scrollbar { display: none; }
-.pill {
-  border: 1px solid #e2e8f0;
-  background: #fff;
-  border-radius: 999px;
-  padding: .4rem .8rem;
-  font-size: .9rem;
-  white-space: nowrap;
-  cursor: pointer;
+
+/* =================================================================
+   SOLUCIÓN DEFINITIVA PARA CENTRADO DE INPUTS
+   ================================================================= */
+
+/* Se aplica a cualquier mat-form-field con la clase .dense en esta página */
+.dense {
+  /* 1. Centra horizontalmente el texto del input */
+  .mat-mdc-input-element {
+    text-align: center !important;
+  }
+
+  /* 2. Centra verticalmente el contenido */
+  .mat-mdc-form-field-flex {
+    height: 42px; /* Altura fija para consistencia */
+    align-items: center;
+  }
+
+  /* 3. La clave: elimina el padding desigual del contenedor interno */
+  .mat-mdc-form-field-infix {
+    padding-top: 0;
+    padding-bottom: 0;
+  }
 }
-.pill.active { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
 
-.price-inputs { display: flex; align-items: center; gap: .5rem; }
 
-/* GRID centrado con cards de ancho fijo (look marketplace) */
+/* =================================================================
+   ESTILOS PARA LA BARRA LATERAL (ASIDE)
+   ================================================================= */
+
+aside h4 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.filter-btn {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-align: left;
+  font-size: 0.9rem;
+  color: #334155;
+  transition: background-color 150ms ease-in-out, color 150ms ease-in-out;
+  border: 1px solid transparent;
+  display: flex;
+  align-items: center;
+}
+.filter-btn:hover { background-color: #f1f5f9; }
+.filter-btn.active {
+  background-color: #eef2ff;
+  color: #4338ca;
+  font-weight: 600;
+  border-color: #c7d2fe;
+}
+
+
+/* =================================================================
+   ESTILOS GENERALES DE LA PÁGINA (GRID, CARDS, ETC.)
+   ================================================================= */
+
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, 240px);
-  justify-content: center;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 1rem;
 }
 
-/* CARD */
 .product-card {
   background: #fff;
-  border: 1px solid #e2e8f0; /* slate-200 */
+  border: 1px solid #e2e8f0;
   border-radius: 1rem;
   overflow: hidden;
   transition: box-shadow .2s, transform .2s;
+  display: flex;
+  flex-direction: column;
 }
 .product-card:hover {
   box-shadow: 0 6px 20px rgba(2, 6, 23, .07);
@@ -72,18 +116,17 @@
 
 .product-image {
   position: relative;
-  background: #f8fafc; /* slate-50 */
+  background: #f8fafc;
   aspect-ratio: 4 / 3;
   display: grid;
   place-items: center;
 }
 .product-image img { width: 100%; height: 100%; object-fit: contain; }
 
-/* Sticker de precio grande */
 .price-sticker {
   position: absolute;
   right: .5rem; bottom: .5rem;
-  background: #0ea5e9; /* sky-500 */
+  background: #0ea5e9;
   color: #fff; font-weight: 800;
   padding: .35rem .55rem;
   border-radius: .5rem;
@@ -91,7 +134,6 @@
   box-shadow: 0 4px 12px rgba(14,165,233,.35);
 }
 
-/* Badge de tipo */
 .badge-tipo {
   position: absolute;
   left: .5rem; top: .5rem;
@@ -102,25 +144,27 @@
   color: #fff;
 }
 
-.product-info { padding: .75rem .75rem 1rem; }
+.product-info {
+  padding: .75rem .75rem 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
 .product-info .name { font-weight: 700; }
-.product-info .desc { color: #64748b; font-size: .875rem; min-height: 2.5rem; margin-top: .15rem; }
+.product-info .desc { color: #64748b; font-size: .875rem; min-height: 2.5rem; margin-top: .15rem; flex-grow: 1; }
 .product-info .actions { display: flex; justify-content: flex-end; margin-top: .5rem; }
 
-/* Skeletons */
 .skeleton { animation: pulse 1.3s ease-in-out infinite; }
 .skeleton-line { height: .9rem; background: #e2e8f0; border-radius: .5rem; margin-top: .5rem; }
 @keyframes pulse {
   0% { opacity: .55; } 50% { opacity: .95; } 100% { opacity: .55; }
 }
 
-/* Paginador redondeado */
 ::ng-deep .mat-mdc-paginator .mat-mdc-paginator-container {
   border: 1px solid #e2e8f0;
   border-radius: 1rem;
 }
 
-/* Utilidad: recorte a dos líneas */
 .line-clamp-2 {
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -128,13 +172,58 @@
   overflow: hidden;
 }
 
-.nav-actions-abs {
-  position: absolute;
-  right: 1rem;
-  top: 30px;
-  transform: translateY(-50%);
-  display: inline-flex;
-  align-items: center;
-  gap: .75rem;
-  z-index: 10;
+
+
+
+
+
+
+
+
+/* Altura objetivo (ajústala a tu gusto: 26–32px suele verse bien) */
+:root { --ff-slim-h: 28px; }
+
+.ff-slim {
+  @include mat.form-field-density(-5);
+}
+
+/* Overrides dirigidos al form-field slim */
+:host ::ng-deep .ff-slim .mat-mdc-text-field-wrapper {
+  height: var(--ff-slim-h) !important;
+  min-height: var(--ff-slim-h) !important;
+  padding: 0 8px !important;   /* compacta padding horizontal */
+}
+
+/* Asegura que el contenido interno se acople al nuevo alto */
+:host ::ng-deep .ff-slim .mat-mdc-form-field-flex {
+  height: 100% !important;
+  align-items: center;          /* centra verticalmente el input */
+}
+
+/* Compensa el label (como está “always”, queda fijo y pequeño) */
+:host ::ng-deep .ff-slim .mat-mdc-floating-label {
+  transform: translateY(-6px) scale(0.85); /* ajusta si cambias el alto */
+  transform-origin: left top;
+  opacity: 0.9;
+}
+
+/* Compacta el área inferior (hints/errores no reservan espacio si no hay) */
+:host ::ng-deep .ff-slim .mat-mdc-form-field-subscript-wrapper {
+  height: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+/* Input: línea y tipografía compactas */
+:host ::ng-deep .ff-slim .mat-mdc-input-element,
+:host ::ng-deep .ff-slim .mdc-text-field__input {
+  line-height: calc(var(--ff-slim-h) - 4px);  /* pequeño respiro */
+  padding: 0 !important;
+  font-size: 12px;                             /* baja tamaño para que quepa cómodo */
+}
+
+/* Opcional: bordes menos “altos” en outline */
+:host ::ng-deep .ff-slim.mat-mdc-form-field-appearance-outline .mat-mdc-notched-outline {
+  /* sin cambios estructurales; solo suaviza si quieres */
 }
