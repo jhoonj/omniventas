@@ -1,57 +1,75 @@
 ```java
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.Assertions;
-import org.mockito.Mockito;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 public class UnsafeSecurityConfigTest {
 
+    @Mock
+    private Config config; // Suponiendo que 'config' es un objeto que tiene el método setUsername
+
+    @InjectMocks
+    private UnsafeSecurityConfig unsafeSecurityConfig;
+
+    public UnsafeSecurityConfigTest() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    @DisplayName("Debería establecer el nombre de usuario correctamente cuando DB_USER está configurado")
+    void shouldSetUsernameWhenDbUserIsConfigured() {
+        // Arrange
+        String expectedDbUser = "testUser";
+        setEnv("DB_USER", expectedDbUser); // Método auxiliar para establecer variables de entorno
+
+        // Act
+        unsafeSecurityConfig.setDbUser();
+
+        // Assert
+        verify(config).setUsername(expectedDbUser);
+    }
+
     @Test
     @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER no está configurado")
-    public void testDbUserNotConfigured() {
+    void shouldThrowExceptionWhenDbUserIsNotConfigured() {
         // Arrange
-        System.clearProperty("DB_USER");
+        setEnv("DB_USER", null); // Simulando que la variable de entorno no está configurada
 
         // Act & Assert
-        IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            String dbUser = System.getenv("DB_USER");
-            if (dbUser == null || dbUser.isEmpty()) {
-                throw new IllegalArgumentException("DB_USER no está configurado");
-            }
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            unsafeSecurityConfig.setDbUser();
         });
-
-        Assertions.assertEquals("DB_USER no está configurado", exception.getMessage());
+        assertEquals("DB_USER no está configurado", exception.getMessage());
     }
 
     @Test
     @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER está vacío")
-    public void testDbUserIsEmpty() {
+    void shouldThrowExceptionWhenDbUserIsEmpty() {
         // Arrange
-        System.setProperty("DB_USER", "");
+        setEnv("DB_USER", ""); // Simulando que la variable de entorno está vacía
 
         // Act & Assert
-        IllegalArgumentException exception = Assertions.assertThrows(IllegalArgumentException.class, () -> {
-            String dbUser = System.getenv("DB_USER");
-            if (dbUser == null || dbUser.isEmpty()) {
-                throw new IllegalArgumentException("DB_USER no está configurado");
-            }
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            unsafeSecurityConfig.setDbUser();
         });
-
-        Assertions.assertEquals("DB_USER no está configurado", exception.getMessage());
+        assertEquals("DB_USER no está configurado", exception.getMessage());
     }
 
-    @Test
-    @DisplayName("Debería retornar el valor de DB_USER cuando está configurado")
-    public void testDbUserIsConfigured() {
-        // Arrange
-        String expectedDbUser = "testUser";
-        System.setProperty("DB_USER", expectedDbUser);
-
-        // Act
-        String dbUser = System.getenv("DB_USER");
-
-        // Assert
-        Assertions.assertEquals(expectedDbUser, dbUser);
+    // Método auxiliar para establecer variables de entorno en pruebas
+    private void setEnv(String key, String value) {
+        try {
+            var env = System.getenv();
+            var field = env.getClass().getDeclaredField("m");
+            field.setAccessible(true);
+            ((Map<String, String>) field.get(env)).put(key, value);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
 ```

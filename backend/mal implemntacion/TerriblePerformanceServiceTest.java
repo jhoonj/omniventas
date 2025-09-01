@@ -1,8 +1,6 @@
 ```java
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +15,7 @@ class TerriblePerformanceServiceTest {
     private TerriblePerformanceService terriblePerformanceService;
 
     @Mock
-    private SomeRepository someRepository; // Suponiendo que existe un repositorio
+    private SomeDependency someDependency; // Suponiendo que hay una dependencia
 
     @BeforeEach
     void setUp() {
@@ -26,44 +24,57 @@ class TerriblePerformanceServiceTest {
 
     @Test
     @DisplayName("Debería ejecutar la lógica de negocio exitosamente")
-    void testExecuteBusinessLogicSuccess() {
+    void testBusinessLogicSuccess() {
         // Arrange
-        // Configurar el comportamiento esperado del mock si es necesario
+        when(someDependency.someMethod()).thenReturn(someExpectedValue);
 
         // Act
-        String result = terriblePerformanceService.executeBusinessLogic();
+        var result = terriblePerformanceService.someBusinessMethod();
 
         // Assert
-        assertEquals("Expected Result", result);
-        // Verificar que el repositorio fue llamado
-        verify(someRepository).someMethod(); // Cambiar por el método real
+        assertEquals(expectedValue, result);
+        verify(someDependency, times(1)).someMethod();
     }
 
     @Test
-    @DisplayName("Debería manejar la excepción correctamente")
-    void testExecuteBusinessLogicHandlesException() {
+    @DisplayName("Debería manejar excepción y realizar rollback")
+    void testBusinessLogicExceptionHandling() {
         // Arrange
-        doThrow(new RuntimeException("Error de prueba")).when(someRepository).someMethod(); // Cambiar por el método real
+        when(someDependency.someMethod()).thenThrow(new RuntimeException("Error"));
 
         // Act
-        String result = terriblePerformanceService.executeBusinessLogic();
+        var result = terriblePerformanceService.someBusinessMethod();
 
         // Assert
-        assertEquals("Fallback Result", result); // Cambiar por el resultado esperado en caso de error
-        // Verificar que el rollback se realizó, si es aplicable
+        assertNull(result);
+        verify(someDependency, times(1)).someMethod();
+        // Aquí podrías verificar que se realizó el rollback si hay un método para ello
     }
 
     @Test
-    @DisplayName("Debería manejar un caso extremo")
-    void testExecuteBusinessLogicEdgeCase() {
+    @DisplayName("Debería manejar caso límite correctamente")
+    void testBusinessLogicEdgeCase() {
         // Arrange
-        // Configurar el comportamiento del mock para un caso extremo
+        when(someDependency.someMethod()).thenReturn(edgeCaseValue);
 
         // Act
-        String result = terriblePerformanceService.executeBusinessLogic();
+        var result = terriblePerformanceService.someBusinessMethod();
 
         // Assert
-        assertEquals("Edge Case Result", result); // Cambiar por el resultado esperado en el caso extremo
+        assertEquals(expectedEdgeCaseValue, result);
+        verify(someDependency, times(1)).someMethod();
+    }
+
+    @Test
+    @DisplayName("Debería lanzar excepción para entradas inválidas")
+    void testBusinessLogicInvalidInput() {
+        // Arrange
+        // Configurar el escenario para una entrada inválida
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            terriblePerformanceService.someBusinessMethod(invalidInput);
+        });
     }
 }
 ```
