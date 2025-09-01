@@ -2,71 +2,62 @@
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-class UnsafeSecurityConfigTest {
+public class UnsafeSecurityConfigTest {
 
+    @Mock
+    private Config config; // Suponiendo que 'config' es un objeto de configuración que se debe inyectar
+
+    @InjectMocks
     private UnsafeSecurityConfig unsafeSecurityConfig;
-    private Config config; // Suponiendo que hay una clase Config que se está utilizando
 
-    @BeforeEach
-    void setUp() {
-        unsafeSecurityConfig = new UnsafeSecurityConfig();
-        config = mock(Config.class); // Mock de la clase Config
+    public UnsafeSecurityConfigTest() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
     @DisplayName("Debería establecer el nombre de usuario correctamente cuando DB_USER está configurado")
-    void testSetUsername_Success() {
+    void shouldSetUsernameWhenDbUserIsConfigured() {
         // Arrange
-        String dbUser = "testUser";
-        setEnv("DB_USER", dbUser); // Método auxiliar para establecer variables de entorno
+        String expectedDbUser = "testUser";
+        System.setProperty("DB_USER", expectedDbUser);
 
         // Act
-        unsafeSecurityConfig.setUsernameFromEnv(config);
+        unsafeSecurityConfig.setDbUser();
 
         // Assert
-        verify(config).setUsername(dbUser);
+        verify(config).setUsername(expectedDbUser);
     }
 
     @Test
     @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER no está configurado")
-    void testSetUsername_ThrowsException_WhenDbUserNotConfigured() {
+    void shouldThrowExceptionWhenDbUserIsNotConfigured() {
         // Arrange
-        setEnv("DB_USER", null); // Simulando que la variable de entorno no está configurada
+        System.clearProperty("DB_USER");
 
         // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            unsafeSecurityConfig.setUsernameFromEnv(config);
+            unsafeSecurityConfig.setDbUser();
         });
         assertEquals("DB_USER no está configurado", exception.getMessage());
     }
 
     @Test
     @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER está vacío")
-    void testSetUsername_ThrowsException_WhenDbUserIsEmpty() {
+    void shouldThrowExceptionWhenDbUserIsEmpty() {
         // Arrange
-        setEnv("DB_USER", ""); // Simulando que la variable de entorno está vacía
+        System.setProperty("DB_USER", "");
 
         // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            unsafeSecurityConfig.setUsernameFromEnv(config);
+            unsafeSecurityConfig.setDbUser();
         });
         assertEquals("DB_USER no está configurado", exception.getMessage());
-    }
-
-    // Método auxiliar para establecer variables de entorno en pruebas
-    private void setEnv(String key, String value) {
-        try {
-            var env = System.getenv();
-            var field = env.getClass().getDeclaredField("m");
-            field.setAccessible(true);
-            ((Map<String, String>) field.get(env)).put(key, value);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }
 ```
