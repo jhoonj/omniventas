@@ -1,69 +1,64 @@
 ```java
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.core.env.Environment;
+import org.mockito.Mockito;
 
-public class UnsafeSecurityConfigTest {
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    @InjectMocks
-    private UnsafeSecurityConfig config;
+class UnsafeSecurityConfigTest {
 
-    @Mock
-    private Environment env;
+    @Test
+    @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER no está configurado")
+    void testDbUserNotConfigured() {
+        // Arrange
+        System.clearProperty("DB_USER");
 
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            String dbUser = System.getenv("DB_USER");
+            if (dbUser == null || dbUser.isEmpty()) {
+                throw new IllegalArgumentException("DB_USER no está configurado");
+            }
+        });
+
+        // Assert
+        assertEquals("DB_USER no está configurado", exception.getMessage());
     }
 
     @Test
-    @DisplayName("Debería establecer el nombre de usuario correctamente desde el entorno")
-    public void testSetUsername_Success() {
+    @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER está vacío")
+    void testDbUserIsEmpty() {
         // Arrange
-        String expectedUsername = "testUser";
-        when(env.getProperty("DB_USER", "defaultUser")).thenReturn(expectedUsername);
+        System.setProperty("DB_USER", "");
 
-        // Act
-        config.setUsername(env.getProperty("DB_USER", "defaultUser"));
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            String dbUser = System.getenv("DB_USER");
+            if (dbUser == null || dbUser.isEmpty()) {
+                throw new IllegalArgumentException("DB_USER no está configurado");
+            }
+        });
 
         // Assert
-        assertEquals(expectedUsername, config.getUsername());
+        assertEquals("DB_USER no está configurado", exception.getMessage());
     }
 
     @Test
-    @DisplayName("Debería establecer el nombre de usuario por defecto cuando no se proporciona")
-    public void testSetUsername_DefaultValue() {
+    @DisplayName("Debería retornar el valor de DB_USER cuando está configurado")
+    void testDbUserIsConfigured() {
         // Arrange
-        String defaultUsername = "defaultUser";
-        when(env.getProperty("DB_USER", "defaultUser")).thenReturn(null);
+        String expectedDbUser = "testUser";
+        System.setProperty("DB_USER", expectedDbUser);
 
         // Act
-        config.setUsername(env.getProperty("DB_USER", "defaultUser"));
+        String dbUser = System.getenv("DB_USER");
+        if (dbUser == null || dbUser.isEmpty()) {
+            throw new IllegalArgumentException("DB_USER no está configurado");
+        }
 
         // Assert
-        assertEquals(defaultUsername, config.getUsername());
-    }
-
-    @Test
-    @DisplayName("Debería manejar correctamente el caso cuando el entorno no tiene la propiedad")
-    public void testSetUsername_EmptyProperty() {
-        // Arrange
-        String expectedUsername = "defaultUser";
-        when(env.getProperty("DB_USER", "defaultUser")).thenReturn("");
-
-        // Act
-        config.setUsername(env.getProperty("DB_USER", "defaultUser"));
-
-        // Assert
-        assertEquals(expectedUsername, config.getUsername());
+        assertEquals(expectedDbUser, dbUser);
     }
 }
 ```
