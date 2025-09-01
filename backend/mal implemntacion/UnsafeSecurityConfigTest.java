@@ -19,23 +19,23 @@ class UnsafeSecurityConfigTest {
 
     @Test
     @DisplayName("Debería establecer el nombre de usuario correctamente cuando DB_USER está configurado")
-    void testSetUsernameWithValidDbUser() {
+    void testSetUsername_Success() {
         // Arrange
-        String expectedDbUser = "validUser";
-        setEnv("DB_USER", expectedDbUser); // Método para establecer variable de entorno
+        String dbUser = "testUser";
+        setEnv("DB_USER", dbUser); // Método auxiliar para establecer variables de entorno
 
         // Act
         unsafeSecurityConfig.setUsernameFromEnv(config);
 
         // Assert
-        verify(config).setUsername(expectedDbUser);
+        verify(config).setUsername(dbUser);
     }
 
     @Test
     @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER no está configurado")
-    void testSetUsernameWithNullDbUser() {
+    void testSetUsername_ThrowsException_WhenDbUserNotConfigured() {
         // Arrange
-        setEnv("DB_USER", null);
+        setEnv("DB_USER", null); // Simulando que la variable de entorno no está configurada
 
         // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -46,9 +46,9 @@ class UnsafeSecurityConfigTest {
 
     @Test
     @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER está vacío")
-    void testSetUsernameWithEmptyDbUser() {
+    void testSetUsername_ThrowsException_WhenDbUserIsEmpty() {
         // Arrange
-        setEnv("DB_USER", "");
+        setEnv("DB_USER", ""); // Simulando que la variable de entorno está vacía
 
         // Act & Assert
         IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
@@ -60,10 +60,10 @@ class UnsafeSecurityConfigTest {
     // Método auxiliar para establecer variables de entorno en pruebas
     private void setEnv(String key, String value) {
         try {
-            var field = System.getenv().getClass().getDeclaredField("m");
+            var env = System.getenv();
+            var field = env.getClass().getDeclaredField("m");
             field.setAccessible(true);
-            var env = (Map<String, String>) field.get(System.getenv());
-            env.put(key, value);
+            ((Map<String, String>) field.get(env)).put(key, value);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
