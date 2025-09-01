@@ -1,8 +1,8 @@
 ```java
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +17,7 @@ class TerriblePerformanceServiceTest {
     private TerriblePerformanceService terriblePerformanceService;
 
     @Mock
-    private SomeDependency someDependency; // Reemplazar con la dependencia real
+    private SomeRepository someRepository; // Suponiendo que hay un repositorio
 
     @BeforeEach
     void setUp() {
@@ -26,45 +26,58 @@ class TerriblePerformanceServiceTest {
 
     @Test
     @DisplayName("Debería ejecutar la lógica de negocio exitosamente")
-    void testExecuteBusinessLogicSuccess() {
+    void testBusinessLogicSuccess() {
         // Arrange
-        // Configurar el comportamiento esperado de las dependencias
+        SomeEntity entity = new SomeEntity(); // Suponiendo que hay una entidad
+        when(someRepository.save(entity)).thenReturn(entity);
 
         // Act
-        String result = terriblePerformanceService.executeBusinessLogic();
+        terriblePerformanceService.executeBusinessLogic(entity);
 
         // Assert
-        assertEquals("Expected Result", result); // Reemplazar con el resultado esperado
-        // Verificar que las dependencias se llamaron correctamente
-        verify(someDependency).someMethod(); // Reemplazar con el método real
+        verify(someRepository).save(entity);
     }
 
     @Test
-    @DisplayName("Debería manejar la excepción correctamente")
-    void testExecuteBusinessLogicExceptionHandling() {
+    @DisplayName("Debería manejar excepción y realizar rollback")
+    void testBusinessLogicExceptionHandling() {
         // Arrange
-        doThrow(new RuntimeException("Error de prueba")).when(someDependency).someMethod(); // Reemplazar con el método real
+        SomeEntity entity = new SomeEntity(); // Suponiendo que hay una entidad
+        doThrow(new RuntimeException("Error al guardar")).when(someRepository).save(entity);
 
-        // Act
-        String result = terriblePerformanceService.executeBusinessLogic();
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            terriblePerformanceService.executeBusinessLogic(entity);
+        });
 
         // Assert
-        assertEquals("Fallback Result", result); // Reemplazar con el resultado esperado en caso de error
-        // Verificar que se realizó el rollback o cualquier otra acción necesaria
-        verify(someDependency).rollback(); // Reemplazar con el método real
+        verify(someRepository).save(entity);
+        // Aquí se podría verificar el rollback si hay un método para ello
     }
 
     @Test
-    @DisplayName("Debería manejar el caso de borde correctamente")
-    void testExecuteBusinessLogicEdgeCase() {
+    @DisplayName("Debería manejar caso de entidad nula")
+    void testBusinessLogicWithNullEntity() {
         // Arrange
-        // Configurar un caso de borde
+        SomeEntity entity = null;
 
-        // Act
-        String result = terriblePerformanceService.executeBusinessLogic();
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            terriblePerformanceService.executeBusinessLogic(entity);
+        });
+    }
 
-        // Assert
-        assertEquals("Edge Case Result", result); // Reemplazar con el resultado esperado en el caso de borde
+    @Test
+    @DisplayName("Debería manejar caso de entidad vacía")
+    void testBusinessLogicWithEmptyEntity() {
+        // Arrange
+        SomeEntity entity = new SomeEntity(); // Suponiendo que hay una entidad
+        entity.setField(""); // Suponiendo que hay un campo que no puede estar vacío
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> {
+            terriblePerformanceService.executeBusinessLogic(entity);
+        });
     }
 }
 ```
