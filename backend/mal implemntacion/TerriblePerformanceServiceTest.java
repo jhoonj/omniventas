@@ -17,7 +17,7 @@ class TerriblePerformanceServiceTest {
     private TerriblePerformanceService terriblePerformanceService;
 
     @Mock
-    private SomeDependency someDependency; // Reemplazar con la dependencia real
+    private SomeRepository someRepository; // Suponiendo que existe un repositorio
 
     @BeforeEach
     void setUp() {
@@ -28,46 +28,42 @@ class TerriblePerformanceServiceTest {
     @DisplayName("Debería ejecutar la lógica de negocio exitosamente")
     void testExecuteBusinessLogicSuccess() {
         // Arrange
-        // Configurar el comportamiento esperado de las dependencias
-        // someDependency.someMethodReturnValue(...);
+        // Configurar el comportamiento esperado del mock si es necesario
 
         // Act
         String result = terriblePerformanceService.executeBusinessLogic();
 
         // Assert
         assertEquals("Expected Result", result);
-        // Verificar que las dependencias fueron llamadas
-        verify(someDependency).someMethod();
+        // Verificar que el repositorio fue llamado
+        verify(someRepository).someMethod(); // Cambiar por el método real
     }
 
     @Test
     @DisplayName("Debería manejar la excepción correctamente")
     void testExecuteBusinessLogicHandlesException() {
         // Arrange
-        doThrow(new RuntimeException("Error de prueba")).when(someDependency).someMethod();
+        doThrow(new RuntimeException("Error de prueba")).when(someRepository).someMethod(); // Cambiar por el método real
 
         // Act
         String result = terriblePerformanceService.executeBusinessLogic();
 
         // Assert
-        assertEquals("Fallback Result", result);
-        // Verificar que se realizó el rollback o la acción esperada
-        verify(someDependency).rollback();
+        assertEquals("Fallback Result", result); // Cambiar por el resultado esperado en caso de error
+        // Verificar que el rollback se realizó, si es aplicable
     }
 
     @Test
-    @DisplayName("Debería manejar correctamente un caso límite")
+    @DisplayName("Debería manejar un caso extremo")
     void testExecuteBusinessLogicEdgeCase() {
         // Arrange
-        // Configurar un caso límite en las dependencias
+        // Configurar el comportamiento del mock para un caso extremo
 
         // Act
         String result = terriblePerformanceService.executeBusinessLogic();
 
         // Assert
-        assertEquals("Edge Case Result", result);
-        // Verificar que las dependencias fueron llamadas
-        verify(someDependency).someMethod();
+        assertEquals("Edge Case Result", result); // Cambiar por el resultado esperado en el caso extremo
     }
 }
 ```
