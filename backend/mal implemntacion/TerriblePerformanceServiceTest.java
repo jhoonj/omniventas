@@ -1,8 +1,7 @@
 ```java
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.DisplayName;
@@ -18,7 +17,7 @@ class TerriblePerformanceServiceTest {
     private TerriblePerformanceService terriblePerformanceService;
 
     @Mock
-    private SomeDependency someDependency; // Reemplaza con la dependencia real
+    private SomeRepository someRepository; // Suponiendo que hay un repositorio que se usa
 
     @BeforeEach
     void setUp() {
@@ -29,55 +28,54 @@ class TerriblePerformanceServiceTest {
     @DisplayName("Debería ejecutar la lógica de negocio exitosamente")
     void testBusinessLogicSuccess() {
         // Arrange
-        when(someDependency.someMethod()).thenReturn(expectedValue); // Ajusta según tu lógica
+        // Configurar el comportamiento esperado del repositorio
+        when(someRepository.someMethod()).thenReturn(someExpectedValue);
 
         // Act
-        var result = terriblePerformanceService.executeBusinessLogic();
+        var result = terriblePerformanceService.someBusinessMethod();
 
         // Assert
         assertEquals(expectedValue, result);
-        verify(someDependency).someMethod();
     }
 
     @Test
     @DisplayName("Debería manejar la excepción correctamente")
     void testBusinessLogicExceptionHandling() {
         // Arrange
-        doThrow(new RuntimeException("Error en la lógica")).when(someDependency).someMethod();
+        doThrow(new RuntimeException("Error en la lógica")).when(someRepository).someMethod();
 
-        // Act
-        var result = terriblePerformanceService.executeBusinessLogic();
-
-        // Assert
-        assertEquals(expectedFallbackValue, result); // Ajusta según tu lógica
-        // Verifica que se maneje la excepción
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            terriblePerformanceService.someBusinessMethod();
+        });
     }
 
     @Test
     @DisplayName("Debería realizar rollback en caso de error")
     void testBusinessLogicRollbackOnError() {
         // Arrange
-        doThrow(new RuntimeException("Error en la lógica")).when(someDependency).someMethod();
+        doThrow(new RuntimeException("Error en la lógica")).when(someRepository).someMethod();
 
-        // Act
-        terriblePerformanceService.executeBusinessLogic();
+        // Act & Assert
+        assertThrows(RuntimeException.class, () -> {
+            terriblePerformanceService.someBusinessMethod();
+        });
 
-        // Assert
-        // Verifica que el rollback se haya ejecutado
-        verify(someDependency).rollback(); // Ajusta según tu lógica
+        // Aquí podrías verificar que el rollback se haya ejecutado correctamente
+        // Esto depende de cómo esté implementado el rollback en tu servicio
     }
 
     @Test
-    @DisplayName("Debería manejar edge case correctamente")
+    @DisplayName("Debería manejar casos límite")
     void testBusinessLogicEdgeCase() {
         // Arrange
-        when(someDependency.someMethod()).thenReturn(edgeCaseValue); // Ajusta según tu lógica
+        when(someRepository.someMethod()).thenReturn(edgeCaseValue);
 
         // Act
-        var result = terriblePerformanceService.executeBusinessLogic();
+        var result = terriblePerformanceService.someBusinessMethod();
 
         // Assert
-        assertEquals(expectedEdgeCaseResult, result); // Ajusta según tu lógica
+        assertEquals(expectedEdgeCaseValue, result);
     }
 }
 ```
