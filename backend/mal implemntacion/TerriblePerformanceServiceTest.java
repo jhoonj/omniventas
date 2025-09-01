@@ -1,6 +1,7 @@
 ```java
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -17,7 +18,7 @@ class TerriblePerformanceServiceTest {
     private TerriblePerformanceService terriblePerformanceService;
 
     @Mock
-    private SomeRepository someRepository; // Suponiendo que hay un repositorio
+    private SomeDependency someDependency; // Reemplaza con la dependencia real
 
     @BeforeEach
     void setUp() {
@@ -28,56 +29,55 @@ class TerriblePerformanceServiceTest {
     @DisplayName("Debería ejecutar la lógica de negocio exitosamente")
     void testBusinessLogicSuccess() {
         // Arrange
-        SomeEntity entity = new SomeEntity(); // Suponiendo que hay una entidad
-        when(someRepository.save(entity)).thenReturn(entity);
+        when(someDependency.someMethod()).thenReturn(expectedValue); // Ajusta según tu lógica
 
         // Act
-        terriblePerformanceService.executeBusinessLogic(entity);
+        var result = terriblePerformanceService.executeBusinessLogic();
 
         // Assert
-        verify(someRepository).save(entity);
+        assertEquals(expectedValue, result);
+        verify(someDependency).someMethod();
     }
 
     @Test
-    @DisplayName("Debería manejar excepción y realizar rollback")
+    @DisplayName("Debería manejar la excepción correctamente")
     void testBusinessLogicExceptionHandling() {
         // Arrange
-        SomeEntity entity = new SomeEntity(); // Suponiendo que hay una entidad
-        doThrow(new RuntimeException("Error al guardar")).when(someRepository).save(entity);
+        doThrow(new RuntimeException("Error en la lógica")).when(someDependency).someMethod();
 
-        // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
-            terriblePerformanceService.executeBusinessLogic(entity);
-        });
+        // Act
+        var result = terriblePerformanceService.executeBusinessLogic();
 
         // Assert
-        verify(someRepository).save(entity);
-        // Aquí se podría verificar el rollback si hay un método para ello
+        assertEquals(expectedFallbackValue, result); // Ajusta según tu lógica
+        // Verifica que se maneje la excepción
     }
 
     @Test
-    @DisplayName("Debería manejar caso de entidad nula")
-    void testBusinessLogicWithNullEntity() {
+    @DisplayName("Debería realizar rollback en caso de error")
+    void testBusinessLogicRollbackOnError() {
         // Arrange
-        SomeEntity entity = null;
+        doThrow(new RuntimeException("Error en la lógica")).when(someDependency).someMethod();
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            terriblePerformanceService.executeBusinessLogic(entity);
-        });
+        // Act
+        terriblePerformanceService.executeBusinessLogic();
+
+        // Assert
+        // Verifica que el rollback se haya ejecutado
+        verify(someDependency).rollback(); // Ajusta según tu lógica
     }
 
     @Test
-    @DisplayName("Debería manejar caso de entidad vacía")
-    void testBusinessLogicWithEmptyEntity() {
+    @DisplayName("Debería manejar edge case correctamente")
+    void testBusinessLogicEdgeCase() {
         // Arrange
-        SomeEntity entity = new SomeEntity(); // Suponiendo que hay una entidad
-        entity.setField(""); // Suponiendo que hay un campo que no puede estar vacío
+        when(someDependency.someMethod()).thenReturn(edgeCaseValue); // Ajusta según tu lógica
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            terriblePerformanceService.executeBusinessLogic(entity);
-        });
+        // Act
+        var result = terriblePerformanceService.executeBusinessLogic();
+
+        // Assert
+        assertEquals(expectedEdgeCaseResult, result); // Ajusta según tu lógica
     }
 }
 ```
