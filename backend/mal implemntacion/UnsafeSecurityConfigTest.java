@@ -1,41 +1,63 @@
-package com.example;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
+```java
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
-/**
- * Pruebas unitarias para UnsafeSecurityConfig
- * Se adicionan pruebas unitarias
- */
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
 public class UnsafeSecurityConfigTest {
-    
-    private UnsafeSecurityConfig unsafesecurityconfig;
-    
-    @BeforeEach
-    void setUp() {
-        unsafesecurityconfig = new UnsafeSecurityConfig();
+
+    @Mock
+    private Config config; // Suponiendo que hay una clase Config que tiene el método setUsername
+
+    @InjectMocks
+    private UnsafeSecurityConfig unsafeSecurityConfig;
+
+    public UnsafeSecurityConfigTest() {
+        MockitoAnnotations.openMocks(this);
     }
-    
+
     @Test
-    void testUnknownMethod() {
-        // Se adicionan pruebas unitarias
-        // TODO: Implementar prueba específica para unknownMethod
-        
-        // Arrange - preparar datos de prueba
-        
-        // Act - ejecutar el método bajo prueba
-        // unsafesecurityconfig.unknownMethod();
-        
-        // Assert - verificar resultados
-        assertNotNull(unsafesecurityconfig);
+    @DisplayName("Debería establecer el nombre de usuario correctamente cuando DB_USER está configurado")
+    void shouldSetUsernameWhenDbUserIsConfigured() {
+        // Arrange
+        String expectedDbUser = "testUser";
+        System.setProperty("DB_USER", expectedDbUser);
+
+        // Act
+        unsafeSecurityConfig.setDbUser();
+
+        // Assert
+        verify(config).setUsername(expectedDbUser);
     }
-    
+
     @Test
-    void testUnknownMethod_EdgeCase() {
-        // Se adicionan pruebas unitarias para casos límite
-        // TODO: Agregar pruebas para casos límite
-        
-        assertNotNull(unsafesecurityconfig);
+    @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER no está configurado")
+    void shouldThrowExceptionWhenDbUserIsNotConfigured() {
+        // Arrange
+        System.clearProperty("DB_USER");
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            unsafeSecurityConfig.setDbUser();
+        });
+        assertEquals("DB_USER no está configurado", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Debería manejar correctamente el caso cuando DB_USER está vacío")
+    void shouldThrowExceptionWhenDbUserIsEmpty() {
+        // Arrange
+        System.setProperty("DB_USER", "");
+
+        // Act & Assert
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
+            unsafeSecurityConfig.setDbUser();
+        });
+        assertEquals("DB_USER no está configurado", exception.getMessage());
     }
 }
+```
