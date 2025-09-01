@@ -1,70 +1,70 @@
 ```java
-import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
 class TerriblePerformanceServiceTest {
 
-    @Mock
-    private SomeRepository someRepository; // Reemplaza con el repositorio real
-
     @InjectMocks
     private TerriblePerformanceService terriblePerformanceService;
 
-    public TerriblePerformanceServiceTest() {
+    @Mock
+    private SomeDependency someDependency; // Reemplazar con la dependencia real
+
+    @BeforeEach
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
     @DisplayName("Debería ejecutar la lógica de negocio exitosamente")
-    void testBusinessLogicSuccess() {
+    void testExecuteBusinessLogicSuccess() {
         // Arrange
-        // Configura el comportamiento esperado del repositorio si es necesario
+        // Configurar el comportamiento esperado de las dependencias
 
         // Act
-        terriblePerformanceService.executeBusinessLogic();
+        String result = terriblePerformanceService.executeBusinessLogic();
 
         // Assert
-        // Verifica que el repositorio haya sido llamado correctamente
-        verify(someRepository).someMethod(); // Reemplaza con el método real
+        assertEquals("Expected Result", result); // Reemplazar con el resultado esperado
+        // Verificar que las dependencias se llamaron correctamente
+        verify(someDependency).someMethod(); // Reemplazar con el método real
     }
 
     @Test
-    @DisplayName("Debería manejar la excepción y realizar rollback")
-    void testBusinessLogicExceptionHandling() {
+    @DisplayName("Debería manejar la excepción correctamente")
+    void testExecuteBusinessLogicExceptionHandling() {
         // Arrange
-        doThrow(new RuntimeException("Error en la lógica de negocio"))
-                .when(someRepository).someMethod(); // Reemplaza con el método real
+        doThrow(new RuntimeException("Error de prueba")).when(someDependency).someMethod(); // Reemplazar con el método real
 
-        // Act & Assert
-        assertThrows(RuntimeException.class, () -> {
-            terriblePerformanceService.executeBusinessLogic();
-        });
+        // Act
+        String result = terriblePerformanceService.executeBusinessLogic();
 
         // Assert
-        // Verifica que el rollback se haya realizado
-        verify(someRepository).rollback(); // Reemplaza con el método real
+        assertEquals("Fallback Result", result); // Reemplazar con el resultado esperado en caso de error
+        // Verificar que se realizó el rollback o cualquier otra acción necesaria
+        verify(someDependency).rollback(); // Reemplazar con el método real
     }
 
     @Test
-    @DisplayName("Debería manejar edge case correctamente")
-    void testBusinessLogicEdgeCase() {
+    @DisplayName("Debería manejar el caso de borde correctamente")
+    void testExecuteBusinessLogicEdgeCase() {
         // Arrange
-        // Configura el comportamiento del repositorio para un caso límite
+        // Configurar un caso de borde
 
         // Act
-        terriblePerformanceService.executeBusinessLogic();
+        String result = terriblePerformanceService.executeBusinessLogic();
 
         // Assert
-        // Verifica el comportamiento esperado para el caso límite
-        verify(someRepository).someEdgeCaseMethod(); // Reemplaza con el método real
+        assertEquals("Edge Case Result", result); // Reemplazar con el resultado esperado en el caso de borde
     }
 }
 ```
