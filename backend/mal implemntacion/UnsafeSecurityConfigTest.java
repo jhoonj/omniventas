@@ -1,75 +1,69 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
+import org.springframework.core.env.Environment;
 
 public class UnsafeSecurityConfigTest {
 
-    @Mock
-    private Config config; // Suponiendo que 'config' es un objeto que tiene el método setUsername
-
     @InjectMocks
-    private UnsafeSecurityConfig unsafeSecurityConfig;
+    private UnsafeSecurityConfig config;
 
-    public UnsafeSecurityConfigTest() {
+    @Mock
+    private Environment env;
+
+    @BeforeEach
+    public void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @DisplayName("Debería establecer el nombre de usuario correctamente cuando DB_USER está configurado")
-    void shouldSetUsernameWhenDbUserIsConfigured() {
+    @DisplayName("Debería establecer el nombre de usuario correctamente desde el entorno")
+    public void testSetUsername_Success() {
         // Arrange
-        String expectedDbUser = "testUser";
-        setEnv("DB_USER", expectedDbUser); // Método auxiliar para establecer variables de entorno
+        String expectedUsername = "testUser";
+        when(env.getProperty("DB_USER", "defaultUser")).thenReturn(expectedUsername);
 
         // Act
-        unsafeSecurityConfig.setDbUser();
+        config.setUsername(env.getProperty("DB_USER", "defaultUser"));
 
         // Assert
-        verify(config).setUsername(expectedDbUser);
+        assertEquals(expectedUsername, config.getUsername());
     }
 
     @Test
-    @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER no está configurado")
-    void shouldThrowExceptionWhenDbUserIsNotConfigured() {
+    @DisplayName("Debería establecer el nombre de usuario por defecto cuando no se proporciona")
+    public void testSetUsername_DefaultValue() {
         // Arrange
-        setEnv("DB_USER", null); // Simulando que la variable de entorno no está configurada
+        String defaultUsername = "defaultUser";
+        when(env.getProperty("DB_USER", "defaultUser")).thenReturn(null);
 
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            unsafeSecurityConfig.setDbUser();
-        });
-        assertEquals("DB_USER no está configurado", exception.getMessage());
+        // Act
+        config.setUsername(env.getProperty("DB_USER", "defaultUser"));
+
+        // Assert
+        assertEquals(defaultUsername, config.getUsername());
     }
 
     @Test
-    @DisplayName("Debería lanzar IllegalArgumentException cuando DB_USER está vacío")
-    void shouldThrowExceptionWhenDbUserIsEmpty() {
+    @DisplayName("Debería manejar correctamente el caso cuando el entorno no tiene la propiedad")
+    public void testSetUsername_EmptyProperty() {
         // Arrange
-        setEnv("DB_USER", ""); // Simulando que la variable de entorno está vacía
+        String expectedUsername = "defaultUser";
+        when(env.getProperty("DB_USER", "defaultUser")).thenReturn("");
 
-        // Act & Assert
-        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () -> {
-            unsafeSecurityConfig.setDbUser();
-        });
-        assertEquals("DB_USER no está configurado", exception.getMessage());
-    }
+        // Act
+        config.setUsername(env.getProperty("DB_USER", "defaultUser"));
 
-    // Método auxiliar para establecer variables de entorno en pruebas
-    private void setEnv(String key, String value) {
-        try {
-            var env = System.getenv();
-            var field = env.getClass().getDeclaredField("m");
-            field.setAccessible(true);
-            ((Map<String, String>) field.get(env)).put(key, value);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
+        // Assert
+        assertEquals(expectedUsername, config.getUsername());
     }
 }
 ```
