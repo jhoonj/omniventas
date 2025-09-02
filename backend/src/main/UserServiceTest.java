@@ -2,118 +2,83 @@
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.BeforeEach;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Optional;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Optional;
-
 class UserServiceTest {
-
-    @Mock
-    private UserRepository userRepository;
 
     @InjectMocks
     private UserService userService;
 
-    @BeforeEach
-    void setUp() {
+    @Mock
+    private SomeDependency someDependency; // Reemplaza con las dependencias reales
+
+    public UserServiceTest() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @DisplayName("Should return user when user exists")
-    void testGetUserById_UserExists() {
+    @DisplayName("Debería procesar correctamente los datos de usuario y devolver un resultado")
+    void testProcessUserData_Success() {
         // Arrange
-        Long userId = 1L;
-        User user = new User(userId, "John Doe", "john.doe@example.com");
-        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+        List<String> usernames = Arrays.asList("user1", "user2");
+        when(someDependency.someMethod(anyList())).thenReturn("Processed Data");
 
         // Act
-        User result = userService.getUserById(userId);
+        Optional<String> result = userService.processUserData(usernames);
 
         // Assert
-        assertNotNull(result);
-        assertEquals(userId, result.getId());
-        assertEquals("John Doe", result.getName());
-        verify(userRepository, times(1)).findById(userId);
+        assertTrue(result.isPresent());
+        assertEquals("Processed Data", result.get());
+        verify(someDependency).someMethod(usernames);
     }
 
     @Test
-    @DisplayName("Should throw exception when user does not exist")
-    void testGetUserById_UserDoesNotExist() {
+    @DisplayName("Debería devolver un Optional vacío cuando la lista de usuarios está vacía")
+    void testProcessUserData_EmptyList() {
         // Arrange
-        Long userId = 1L;
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.getUserById(userId));
-        verify(userRepository, times(1)).findById(userId);
-    }
-
-    @Test
-    @DisplayName("Should create a new user successfully")
-    void testCreateUser_Success() {
-        // Arrange
-        User user = new User(null, "Jane Doe", "jane.doe@example.com");
-        when(userRepository.save(any(User.class))).thenReturn(new User(1L, "Jane Doe", "jane.doe@example.com"));
+        List<String> usernames = Collections.emptyList();
 
         // Act
-        User createdUser = userService.createUser(user);
+        Optional<String> result = userService.processUserData(usernames);
 
         // Assert
-        assertNotNull(createdUser);
-        assertEquals("Jane Doe", createdUser.getName());
-        assertEquals("jane.doe@example.com", createdUser.getEmail());
-        verify(userRepository, times(1)).save(user);
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Should throw exception when creating user with existing email")
-    void testCreateUser_EmailAlreadyExists() {
+    @DisplayName("Debería manejar una excepción y devolver un Optional vacío en caso de error")
+    void testProcessUserData_Error() {
         // Arrange
-        User user = new User(null, "Jane Doe", "jane.doe@example.com");
-        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
-
-        // Act & Assert
-        assertThrows(EmailAlreadyExistsException.class, () -> userService.createUser(user));
-        verify(userRepository, times(1)).findByEmail(user.getEmail());
-    }
-
-    @Test
-    @DisplayName("Should update user successfully")
-    void testUpdateUser_Success() {
-        // Arrange
-        Long userId = 1L;
-        User existingUser = new User(userId, "John Doe", "john.doe@example.com");
-        User updatedUser = new User(userId, "John Smith", "john.smith@example.com");
-        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
-        when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+        List<String> usernames = Arrays.asList("user1");
+        when(someDependency.someMethod(anyList())).thenThrow(new RuntimeException("Error processing"));
 
         // Act
-        User result = userService.updateUser(userId, updatedUser);
+        Optional<String> result = userService.processUserData(usernames);
 
         // Assert
-        assertNotNull(result);
-        assertEquals("John Smith", result.getName());
-        verify(userRepository, times(1)).findById(userId);
-        verify(userRepository, times(1)).save(updatedUser);
+        assertFalse(result.isPresent());
+        verify(someDependency).someMethod(usernames);
     }
 
     @Test
-    @DisplayName("Should throw exception when updating non-existing user")
-    void testUpdateUser_UserDoesNotExist() {
+    @DisplayName("Debería manejar un caso de usuario nulo y devolver un Optional vacío")
+    void testProcessUserData_NullUsernames() {
         // Arrange
-        Long userId = 1L;
-        User updatedUser = new User(userId, "John Smith", "john.smith@example.com");
-        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+        List<String> usernames = null;
 
-        // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.updateUser(userId, updatedUser));
-        verify(userRepository, times(1)).findById(userId);
+        // Act
+        Optional<String> result = userService.processUserData(usernames);
+
+        // Assert
+        assertFalse(result.isPresent());
     }
 }
 ```

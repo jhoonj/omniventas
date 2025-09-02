@@ -4,100 +4,83 @@ import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-@DisplayName("Tests for SecurityUtils")
 class SecurityUtilsTest {
 
+    @InjectMocks
     private SecurityUtils securityUtils;
 
     @BeforeEach
     void setUp() {
-        securityUtils = new SecurityUtils();
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @DisplayName("Should return true for valid access")
+    @DisplayName("Should return true when valid access is provided")
     void testValidAccess() {
         // Arrange
-        String userRole = "ADMIN";
-        String requiredRole = "ADMIN";
+        String validAccessToken = "validToken";
 
         // Act
-        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
+        boolean result = securityUtils.hasAccess(validAccessToken);
 
         // Assert
-        assertTrue(hasAccess, "User should have access with valid role");
+        assertTrue(result, "Expected access to be granted for valid token");
     }
 
     @Test
-    @DisplayName("Should return false for invalid access")
+    @DisplayName("Should return false when invalid access is provided")
     void testInvalidAccess() {
         // Arrange
-        String userRole = "USER";
-        String requiredRole = "ADMIN";
+        String invalidAccessToken = "invalidToken";
 
         // Act
-        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
+        boolean result = securityUtils.hasAccess(invalidAccessToken);
 
         // Assert
-        assertFalse(hasAccess, "User should not have access with invalid role");
+        assertFalse(result, "Expected access to be denied for invalid token");
     }
 
     @Test
-    @DisplayName("Should handle null user role gracefully")
-    void testNullUserRole() {
+    @DisplayName("Should handle null access token gracefully")
+    void testNullAccessToken() {
         // Arrange
-        String userRole = null;
-        String requiredRole = "ADMIN";
+        String nullAccessToken = null;
 
         // Act
-        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
+        boolean result = securityUtils.hasAccess(nullAccessToken);
 
         // Assert
-        assertFalse(hasAccess, "Null user role should not grant access");
+        assertFalse(result, "Expected access to be denied for null token");
     }
 
     @Test
-    @DisplayName("Should handle null required role gracefully")
-    void testNullRequiredRole() {
+    @DisplayName("Should handle empty access token gracefully")
+    void testEmptyAccessToken() {
         // Arrange
-        String userRole = "ADMIN";
-        String requiredRole = null;
+        String emptyAccessToken = "";
 
         // Act
-        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
+        boolean result = securityUtils.hasAccess(emptyAccessToken);
 
         // Assert
-        assertFalse(hasAccess, "Null required role should not grant access");
+        assertFalse(result, "Expected access to be denied for empty token");
     }
 
     @Test
-    @DisplayName("Should return false for empty user role")
-    void testEmptyUserRole() {
+    @DisplayName("Should return false for expired access token")
+    void testExpiredAccessToken() {
         // Arrange
-        String userRole = "";
-        String requiredRole = "ADMIN";
+        String expiredAccessToken = "expiredToken";
 
         // Act
-        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
+        boolean result = securityUtils.hasAccess(expiredAccessToken);
 
         // Assert
-        assertFalse(hasAccess, "Empty user role should not grant access");
-    }
-
-    @Test
-    @DisplayName("Should return false for empty required role")
-    void testEmptyRequiredRole() {
-        // Arrange
-        String userRole = "ADMIN";
-        String requiredRole = "";
-
-        // Act
-        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
-
-        // Assert
-        assertFalse(hasAccess, "Empty required role should not grant access");
+        assertFalse(result, "Expected access to be denied for expired token");
     }
 }
 ```
