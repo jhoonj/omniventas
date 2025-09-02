@@ -1,85 +1,76 @@
 ```java
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 class UserServiceTest {
 
-    private final UserService userService = new UserService();
+    @InjectMocks
+    private UserService userService;
 
-    @Test
-    @DisplayName("Should return formatted string when usernames are provided")
-    void processUserData_ShouldReturnFormattedString_WhenUsernamesAreProvided() {
-        // Arrange
-        List<String> usernames = Arrays.asList("user1", "user2", "user3");
+    @Mock
+    private UserRepository userRepository;
 
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals("user1, user2, user3", result.get());
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @DisplayName("Should return empty when no usernames are provided")
-    void processUserData_ShouldReturnEmpty_WhenNoUsernamesAreProvided() {
+    @DisplayName("Debería procesar datos de usuario exitosamente")
+    void testProcessUserData_Success() {
         // Arrange
-        List<String> usernames = Collections.emptyList();
+        User user = new User("john.doe@example.com", "John", "Doe");
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Act
-        Optional<String> result = userService.processUserData(usernames);
+        User result = userService.processUserData(user);
 
         // Assert
-        assertFalse(result.isPresent());
+        assertNotNull(result);
+        assertEquals("john.doe@example.com", result.getEmail());
+        verify(userRepository, times(1)).save(user);
     }
 
     @Test
-    @DisplayName("Should handle null usernames gracefully")
-    void processUserData_ShouldReturnEmpty_WhenUsernamesAreNull() {
+    @DisplayName("Debería lanzar excepción cuando el usuario es nulo")
+    void testProcessUserData_NullUser() {
         // Arrange
-        List<String> usernames = null;
+        User user = null;
 
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertFalse(result.isPresent());
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(user));
     }
 
     @Test
-    @DisplayName("Should return formatted string with single username")
-    void processUserData_ShouldReturnFormattedString_WhenSingleUsernameIsProvided() {
+    @DisplayName("Debería lanzar excepción cuando el email es inválido")
+    void testProcessUserData_InvalidEmail() {
         // Arrange
-        List<String> usernames = Collections.singletonList("user1");
+        User user = new User("invalid-email", "John", "Doe");
 
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals("user1", result.get());
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(user));
     }
 
     @Test
-    @DisplayName("Should return formatted string with usernames containing special characters")
-    void processUserData_ShouldReturnFormattedString_WhenUsernamesContainSpecialCharacters() {
+    @DisplayName("Debería manejar correctamente la excepción de base de datos")
+    void testProcessUserData_DatabaseError() {
         // Arrange
-        List<String> usernames = Arrays.asList("user@1", "user#2", "user$3");
+        User user = new User("john.doe@example.com", "John", "Doe");
+        when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("Database error"));
 
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals("user@1, user#2, user$3", result.get());
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> userService.processUserData(user));
+        assertEquals("Database error", exception.getMessage());
+        verify(userRepository, times(1)).save(user);
     }
 }
 ```
