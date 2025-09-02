@@ -1,91 +1,65 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
-class SecurityUtilsTest {
+import java.util.concurrent.atomic.AtomicInteger;
 
-    @InjectMocks
-    private SecurityUtils securityUtils;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+@DisplayName("SecurityUtils Test")
+public class SecurityUtilsTest {
+
+    @Test
+    @DisplayName("Debería incrementar el contador de intentos de inicio de sesión")
+    public void testIncrementLoginAttempts() {
+        // Arrange
+        AtomicInteger initialAttempts = new AtomicInteger(SecurityUtils.getLoginAttempts());
+
+        // Act
+        SecurityUtils.incrementLoginAttempts();
+
+        // Assert
+        assertEquals(initialAttempts.get() + 1, SecurityUtils.getLoginAttempts());
     }
 
     @Test
-    @DisplayName("Debería permitir acceso cuando las credenciales son válidas")
-    void testValidAccess() {
+    @DisplayName("Debería resetear el contador de intentos de inicio de sesión")
+    public void testResetLoginAttempts() {
         // Arrange
-        String username = "validUser";
-        String password = "validPassword";
+        SecurityUtils.incrementLoginAttempts();
+        SecurityUtils.incrementLoginAttempts();
+        int attemptsBeforeReset = SecurityUtils.getLoginAttempts();
 
         // Act
-        boolean result = securityUtils.hasAccess(username, password);
+        SecurityUtils.resetLoginAttempts();
 
         // Assert
-        assertTrue(result, "El acceso debería ser permitido para credenciales válidas");
+        assertEquals(0, SecurityUtils.getLoginAttempts());
+        assertEquals(attemptsBeforeReset, 2);
     }
 
     @Test
-    @DisplayName("Debería denegar acceso cuando el usuario es inválido")
-    void testInvalidUserAccess() {
+    @DisplayName("Debería devolver el número actual de intentos de inicio de sesión")
+    public void testGetLoginAttempts() {
         // Arrange
-        String username = "invalidUser";
-        String password = "validPassword";
+        SecurityUtils.incrementLoginAttempts();
+        SecurityUtils.incrementLoginAttempts();
 
         // Act
-        boolean result = securityUtils.hasAccess(username, password);
+        int currentAttempts = SecurityUtils.getLoginAttempts();
 
         // Assert
-        assertFalse(result, "El acceso debería ser denegado para un usuario inválido");
+        assertEquals(2, currentAttempts);
     }
 
     @Test
-    @DisplayName("Debería denegar acceso cuando la contraseña es incorrecta")
-    void testInvalidPasswordAccess() {
-        // Arrange
-        String username = "validUser";
-        String password = "invalidPassword";
-
+    @DisplayName("Debería manejar correctamente el caso de intentos de inicio de sesión sin incrementos previos")
+    public void testGetLoginAttemptsWithoutIncrement() {
         // Act
-        boolean result = securityUtils.hasAccess(username, password);
+        int currentAttempts = SecurityUtils.getLoginAttempts();
 
         // Assert
-        assertFalse(result, "El acceso debería ser denegado para una contraseña incorrecta");
-    }
-
-    @Test
-    @DisplayName("Debería manejar correctamente el caso de usuario nulo")
-    void testNullUserAccess() {
-        // Arrange
-        String username = null;
-        String password = "validPassword";
-
-        // Act
-        boolean result = securityUtils.hasAccess(username, password);
-
-        // Assert
-        assertFalse(result, "El acceso debería ser denegado para un usuario nulo");
-    }
-
-    @Test
-    @DisplayName("Debería manejar correctamente el caso de contraseña nula")
-    void testNullPasswordAccess() {
-        // Arrange
-        String username = "validUser";
-        String password = null;
-
-        // Act
-        boolean result = securityUtils.hasAccess(username, password);
-
-        // Assert
-        assertFalse(result, "El acceso debería ser denegado para una contraseña nula");
+        assertEquals(0, currentAttempts);
     }
 }
 ```
