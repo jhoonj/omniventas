@@ -1,65 +1,103 @@
 ```java
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 
-import java.util.concurrent.atomic.AtomicInteger;
+@DisplayName("Tests for SecurityUtils")
+class SecurityUtilsTest {
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+    private SecurityUtils securityUtils;
 
-@DisplayName("SecurityUtils Test")
-public class SecurityUtilsTest {
-
-    @Test
-    @DisplayName("Debería incrementar el contador de intentos de inicio de sesión")
-    public void testIncrementLoginAttempts() {
-        // Arrange
-        AtomicInteger initialAttempts = new AtomicInteger(SecurityUtils.getLoginAttempts());
-
-        // Act
-        SecurityUtils.incrementLoginAttempts();
-
-        // Assert
-        assertEquals(initialAttempts.get() + 1, SecurityUtils.getLoginAttempts());
+    @BeforeEach
+    void setUp() {
+        securityUtils = new SecurityUtils();
     }
 
     @Test
-    @DisplayName("Debería resetear el contador de intentos de inicio de sesión")
-    public void testResetLoginAttempts() {
+    @DisplayName("Should return true for valid access")
+    void testValidAccess() {
         // Arrange
-        SecurityUtils.incrementLoginAttempts();
-        SecurityUtils.incrementLoginAttempts();
-        int attemptsBeforeReset = SecurityUtils.getLoginAttempts();
+        String userRole = "ADMIN";
+        String requiredRole = "ADMIN";
 
         // Act
-        SecurityUtils.resetLoginAttempts();
+        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
 
         // Assert
-        assertEquals(0, SecurityUtils.getLoginAttempts());
-        assertEquals(attemptsBeforeReset, 2);
+        assertTrue(hasAccess, "User should have access with valid role");
     }
 
     @Test
-    @DisplayName("Debería devolver el número actual de intentos de inicio de sesión")
-    public void testGetLoginAttempts() {
+    @DisplayName("Should return false for invalid access")
+    void testInvalidAccess() {
         // Arrange
-        SecurityUtils.incrementLoginAttempts();
-        SecurityUtils.incrementLoginAttempts();
+        String userRole = "USER";
+        String requiredRole = "ADMIN";
 
         // Act
-        int currentAttempts = SecurityUtils.getLoginAttempts();
+        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
 
         // Assert
-        assertEquals(2, currentAttempts);
+        assertFalse(hasAccess, "User should not have access with invalid role");
     }
 
     @Test
-    @DisplayName("Debería manejar correctamente el caso de intentos de inicio de sesión sin incrementos previos")
-    public void testGetLoginAttemptsWithoutIncrement() {
+    @DisplayName("Should handle null user role gracefully")
+    void testNullUserRole() {
+        // Arrange
+        String userRole = null;
+        String requiredRole = "ADMIN";
+
         // Act
-        int currentAttempts = SecurityUtils.getLoginAttempts();
+        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
 
         // Assert
-        assertEquals(0, currentAttempts);
+        assertFalse(hasAccess, "Null user role should not grant access");
+    }
+
+    @Test
+    @DisplayName("Should handle null required role gracefully")
+    void testNullRequiredRole() {
+        // Arrange
+        String userRole = "ADMIN";
+        String requiredRole = null;
+
+        // Act
+        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
+
+        // Assert
+        assertFalse(hasAccess, "Null required role should not grant access");
+    }
+
+    @Test
+    @DisplayName("Should return false for empty user role")
+    void testEmptyUserRole() {
+        // Arrange
+        String userRole = "";
+        String requiredRole = "ADMIN";
+
+        // Act
+        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
+
+        // Assert
+        assertFalse(hasAccess, "Empty user role should not grant access");
+    }
+
+    @Test
+    @DisplayName("Should return false for empty required role")
+    void testEmptyRequiredRole() {
+        // Arrange
+        String userRole = "ADMIN";
+        String requiredRole = "";
+
+        // Act
+        boolean hasAccess = securityUtils.hasAccess(userRole, requiredRole);
+
+        // Assert
+        assertFalse(hasAccess, "Empty required role should not grant access");
     }
 }
 ```

@@ -11,14 +11,13 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
 
-@DisplayName("UserService Test")
 class UserServiceTest {
-
-    @InjectMocks
-    private UserService userService;
 
     @Mock
     private UserRepository userRepository;
+
+    @InjectMocks
+    private UserService userService;
 
     @BeforeEach
     void setUp() {
@@ -26,56 +25,95 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Should process user data successfully")
-    void testProcessUserData_Success() {
+    @DisplayName("Should return user when user exists")
+    void testGetUserById_UserExists() {
         // Arrange
-        User user = new User(1, "John Doe", "john.doe@example.com");
-        when(userRepository.findById(1)).thenReturn(Optional.of(user));
+        Long userId = 1L;
+        User user = new User(userId, "John Doe", "john.doe@example.com");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
         // Act
-        User result = userService.processUserData(1);
+        User result = userService.getUserById(userId);
 
         // Assert
         assertNotNull(result);
+        assertEquals(userId, result.getId());
         assertEquals("John Doe", result.getName());
-        verify(userRepository, times(1)).findById(1);
+        verify(userRepository, times(1)).findById(userId);
     }
 
     @Test
-    @DisplayName("Should throw exception when user not found")
-    void testProcessUserData_UserNotFound() {
+    @DisplayName("Should throw exception when user does not exist")
+    void testGetUserById_UserDoesNotExist() {
         // Arrange
-        when(userRepository.findById(1)).thenReturn(Optional.empty());
+        Long userId = 1L;
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.processUserData(1));
-        verify(userRepository, times(1)).findById(1);
+        assertThrows(UserNotFoundException.class, () -> userService.getUserById(userId));
+        verify(userRepository, times(1)).findById(userId);
     }
 
     @Test
-    @DisplayName("Should handle invalid user ID gracefully")
-    void testProcessUserData_InvalidUserId() {
+    @DisplayName("Should create a new user successfully")
+    void testCreateUser_Success() {
         // Arrange
-        int invalidUserId = -1;
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(invalidUserId));
-    }
-
-    @Test
-    @DisplayName("Should process user data with edge case")
-    void testProcessUserData_EdgeCase() {
-        // Arrange
-        User user = new User(2, "Jane Doe", "jane.doe@example.com");
-        when(userRepository.findById(2)).thenReturn(Optional.of(user));
+        User user = new User(null, "Jane Doe", "jane.doe@example.com");
+        when(userRepository.save(any(User.class))).thenReturn(new User(1L, "Jane Doe", "jane.doe@example.com"));
 
         // Act
-        User result = userService.processUserData(2);
+        User createdUser = userService.createUser(user);
+
+        // Assert
+        assertNotNull(createdUser);
+        assertEquals("Jane Doe", createdUser.getName());
+        assertEquals("jane.doe@example.com", createdUser.getEmail());
+        verify(userRepository, times(1)).save(user);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when creating user with existing email")
+    void testCreateUser_EmailAlreadyExists() {
+        // Arrange
+        User user = new User(null, "Jane Doe", "jane.doe@example.com");
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+
+        // Act & Assert
+        assertThrows(EmailAlreadyExistsException.class, () -> userService.createUser(user));
+        verify(userRepository, times(1)).findByEmail(user.getEmail());
+    }
+
+    @Test
+    @DisplayName("Should update user successfully")
+    void testUpdateUser_Success() {
+        // Arrange
+        Long userId = 1L;
+        User existingUser = new User(userId, "John Doe", "john.doe@example.com");
+        User updatedUser = new User(userId, "John Smith", "john.smith@example.com");
+        when(userRepository.findById(userId)).thenReturn(Optional.of(existingUser));
+        when(userRepository.save(any(User.class))).thenReturn(updatedUser);
+
+        // Act
+        User result = userService.updateUser(userId, updatedUser);
 
         // Assert
         assertNotNull(result);
-        assertEquals("Jane Doe", result.getName());
-        verify(userRepository, times(1)).findById(2);
+        assertEquals("John Smith", result.getName());
+        verify(userRepository, times(1)).findById(userId);
+        verify(userRepository, times(1)).save(updatedUser);
+    }
+
+    @Test
+    @DisplayName("Should throw exception when updating non-existing user")
+    void testUpdateUser_UserDoesNotExist() {
+        // Arrange
+        Long userId = 1L;
+        User updatedUser = new User(userId, "John Smith", "john.smith@example.com");
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // Act & Assert
+        assertThrows(UserNotFoundException.class, () -> userService.updateUser(userId, updatedUser));
+        verify(userRepository, times(1)).findById(userId);
     }
 }
 ```
