@@ -2,96 +2,90 @@
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class SecurityUtilsTest {
+class SecurityUtilsTest {
 
-    @Mock
-    private Connection connection;
-
-    @Mock
-    private PreparedStatement preparedStatement;
-
-    @Mock
-    private ResultSet resultSet;
-
+    @InjectMocks
     private SecurityUtils securityUtils;
 
     @BeforeEach
-    public void setUp() throws SQLException {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
-        securityUtils = new SecurityUtils();
-        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
     }
 
     @Test
-    @DisplayName("Debería retornar permisos exitosamente cuando se proporcionan user_id y resource válidos")
-    public void testGetPermissions_Success() throws SQLException {
+    @DisplayName("Debería permitir acceso cuando las credenciales son válidas")
+    void testValidAccess() {
         // Arrange
-        String userId = "123";
-        String resource = "resource1";
-        String expectedPermissions = "READ,WRITE";
+        String validUsername = "user";
+        String validPassword = "password";
 
-        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(true);
-        when(resultSet.getString("permissions")).thenReturn(expectedPermissions);
-        
         // Act
-        String actualPermissions = securityUtils.getPermissions(connection, userId, resource);
+        boolean result = securityUtils.hasAccess(validUsername, validPassword);
 
         // Assert
-        assertEquals(expectedPermissions, actualPermissions);
-        verify(preparedStatement).setString(1, userId);
-        verify(preparedStatement).setString(2, resource);
-        verify(preparedStatement).executeQuery();
+        assertTrue(result, "El acceso debería ser permitido para credenciales válidas");
     }
 
     @Test
-    @DisplayName("Debería lanzar SQLException cuando ocurre un error en la base de datos")
-    public void testGetPermissions_SQLException() throws SQLException {
+    @DisplayName("Debería denegar acceso cuando el nombre de usuario es inválido")
+    void testInvalidUsername() {
         // Arrange
-        String userId = "123";
-        String resource = "resource1";
+        String invalidUsername = "invalidUser";
+        String validPassword = "password";
 
-        when(preparedStatement.executeQuery()).thenThrow(new SQLException("Database error"));
-
-        // Act & Assert
-        assertThrows(SQLException.class, () -> {
-            securityUtils.getPermissions(connection, userId, resource);
-        });
-        verify(preparedStatement).setString(1, userId);
-        verify(preparedStatement).setString(2, resource);
-        verify(preparedStatement).executeQuery();
-    }
-
-    @Test
-    @DisplayName("Debería retornar null cuando no se encuentran permisos para el user_id y resource")
-    public void testGetPermissions_NoPermissions() throws SQLException {
-        // Arrange
-        String userId = "123";
-        String resource = "resource1";
-
-        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(false);
-        
         // Act
-        String actualPermissions = securityUtils.getPermissions(connection, userId, resource);
+        boolean result = securityUtils.hasAccess(invalidUsername, validPassword);
 
         // Assert
-        assertNull(actualPermissions);
-        verify(preparedStatement).setString(1, userId);
-        verify(preparedStatement).setString(2, resource);
-        verify(preparedStatement).executeQuery();
+        assertFalse(result, "El acceso debería ser denegado para un nombre de usuario inválido");
+    }
+
+    @Test
+    @DisplayName("Debería denegar acceso cuando la contraseña es inválida")
+    void testInvalidPassword() {
+        // Arrange
+        String validUsername = "user";
+        String invalidPassword = "invalidPassword";
+
+        // Act
+        boolean result = securityUtils.hasAccess(validUsername, invalidPassword);
+
+        // Assert
+        assertFalse(result, "El acceso debería ser denegado para una contraseña inválida");
+    }
+
+    @Test
+    @DisplayName("Debería denegar acceso cuando ambos, nombre de usuario y contraseña son inválidos")
+    void testInvalidCredentials() {
+        // Arrange
+        String invalidUsername = "invalidUser";
+        String invalidPassword = "invalidPassword";
+
+        // Act
+        boolean result = securityUtils.hasAccess(invalidUsername, invalidPassword);
+
+        // Assert
+        assertFalse(result, "El acceso debería ser denegado para credenciales inválidas");
+    }
+
+    @Test
+    @DisplayName("Debería manejar correctamente el caso de credenciales nulas")
+    void testNullCredentials() {
+        // Arrange
+        String nullUsername = null;
+        String nullPassword = null;
+
+        // Act
+        boolean result = securityUtils.hasAccess(nullUsername, nullPassword);
+
+        // Assert
+        assertFalse(result, "El acceso debería ser denegado para credenciales nulas");
     }
 }
 ```
