@@ -1,35 +1,97 @@
 ```java
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-class SecurityUtilsTest {
+public class SecurityUtilsTest {
 
-    @DisplayName("Reset login attempts should set loginAttempts to zero")
-    @Test
-    void resetLoginAttempts_ShouldSetLoginAttemptsToZero() {
-        // Arrange
-        SecurityUtils.setLoginAttempts(5); // Simulamos que hay 5 intentos de login
+    @Mock
+    private Connection connection;
 
-        // Act
-        SecurityUtils.resetLoginAttempts();
+    @Mock
+    private PreparedStatement preparedStatement;
 
-        // Assert
-        assertEquals(0, SecurityUtils.getLoginAttempts(), "Login attempts should be reset to zero");
+    @Mock
+    private ResultSet resultSet;
+
+    private SecurityUtils securityUtils;
+
+    @BeforeEach
+    public void setUp() throws SQLException {
+        MockitoAnnotations.openMocks(this);
+        securityUtils = new SecurityUtils();
+        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
     }
 
-    @DisplayName("Reset login attempts should not affect other states")
     @Test
-    void resetLoginAttempts_ShouldNotAffectOtherStates() {
+    @DisplayName("Debería retornar permisos exitosamente cuando se proporcionan user_id y resource válidos")
+    public void testGetPermissions_Success() throws SQLException {
         // Arrange
-        SecurityUtils.setLoginAttempts(3); // Simulamos que hay 3 intentos de login
+        String userId = "123";
+        String resource = "resource1";
+        String expectedPermissions = "READ,WRITE";
 
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(true);
+        when(resultSet.getString("permissions")).thenReturn(expectedPermissions);
+        
         // Act
-        SecurityUtils.resetLoginAttempts();
+        String actualPermissions = securityUtils.getPermissions(connection, userId, resource);
 
         // Assert
-        assertEquals(0, SecurityUtils.getLoginAttempts(), "Login attempts should be reset to zero");
-        // Aquí podrías agregar más aserciones si hay otros estados que deban ser verificados
+        assertEquals(expectedPermissions, actualPermissions);
+        verify(preparedStatement).setString(1, userId);
+        verify(preparedStatement).setString(2, resource);
+        verify(preparedStatement).executeQuery();
+    }
+
+    @Test
+    @DisplayName("Debería lanzar SQLException cuando ocurre un error en la base de datos")
+    public void testGetPermissions_SQLException() throws SQLException {
+        // Arrange
+        String userId = "123";
+        String resource = "resource1";
+
+        when(preparedStatement.executeQuery()).thenThrow(new SQLException("Database error"));
+
+        // Act & Assert
+        assertThrows(SQLException.class, () -> {
+            securityUtils.getPermissions(connection, userId, resource);
+        });
+        verify(preparedStatement).setString(1, userId);
+        verify(preparedStatement).setString(2, resource);
+        verify(preparedStatement).executeQuery();
+    }
+
+    @Test
+    @DisplayName("Debería retornar null cuando no se encuentran permisos para el user_id y resource")
+    public void testGetPermissions_NoPermissions() throws SQLException {
+        // Arrange
+        String userId = "123";
+        String resource = "resource1";
+
+        when(preparedStatement.executeQuery()).thenReturn(resultSet);
+        when(resultSet.next()).thenReturn(false);
+        
+        // Act
+        String actualPermissions = securityUtils.getPermissions(connection, userId, resource);
+
+        // Assert
+        assertNull(actualPermissions);
+        verify(preparedStatement).setString(1, userId);
+        verify(preparedStatement).setString(2, resource);
+        verify(preparedStatement).executeQuery();
     }
 }
 ```

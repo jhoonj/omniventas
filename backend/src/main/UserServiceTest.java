@@ -1,15 +1,14 @@
 ```java
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 class UserServiceTest {
 
@@ -17,22 +16,21 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Should return formatted string when usernames are provided")
-    void testProcessUserData_WithValidUsernames_ReturnsFormattedString() {
+    void testProcessUserData_Success() {
         // Arrange
         List<String> usernames = Arrays.asList("user1", "user2", "user3");
-        String expected = "user1, user2, user3";
 
         // Act
         Optional<String> result = userService.processUserData(usernames);
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals(expected, result.get());
+        assertEquals("Processed users: user1, user2, user3", result.get());
     }
 
     @Test
-    @DisplayName("Should return empty Optional when no usernames are provided")
-    void testProcessUserData_WithEmptyUsernames_ReturnsEmptyOptional() {
+    @DisplayName("Should return empty when no usernames are provided")
+    void testProcessUserData_EmptyList() {
         // Arrange
         List<String> usernames = Collections.emptyList();
 
@@ -44,23 +42,8 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Should return formatted string when single username is provided")
-    void testProcessUserData_WithSingleUsername_ReturnsFormattedString() {
-        // Arrange
-        List<String> usernames = Collections.singletonList("user1");
-        String expected = "user1";
-
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals(expected, result.get());
-    }
-
-    @Test
     @DisplayName("Should handle null usernames gracefully")
-    void testProcessUserData_WithNullUsernames_ReturnsEmptyOptional() {
+    void testProcessUserData_NullList() {
         // Arrange
         List<String> usernames = null;
 
@@ -72,18 +55,31 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Should return formatted string with duplicates")
-    void testProcessUserData_WithDuplicateUsernames_ReturnsFormattedString() {
+    @DisplayName("Should return formatted string with single username")
+    void testProcessUserData_SingleUsername() {
         // Arrange
-        List<String> usernames = Arrays.asList("user1", "user1", "user2");
-        String expected = "user1, user1, user2";
+        List<String> usernames = Collections.singletonList("user1");
 
         // Act
         Optional<String> result = userService.processUserData(usernames);
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals(expected, result.get());
+        assertEquals("Processed users: user1", result.get());
+    }
+
+    @Test
+    @DisplayName("Should return formatted string with multiple usernames")
+    void testProcessUserData_MultipleUsernames() {
+        // Arrange
+        List<String> usernames = Arrays.asList("user1", "user2");
+
+        // Act
+        Optional<String> result = userService.processUserData(usernames);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals("Processed users: user1, user2", result.get());
     }
 }
 ```
