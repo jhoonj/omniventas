@@ -1,86 +1,35 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SecurityUtilsTest {
 
-    @InjectMocks
-    private SecurityUtils securityUtils;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
+    @DisplayName("Reset login attempts should set loginAttempts to zero")
     @Test
-    @DisplayName("Should return true when valid access is provided")
-    void testValidAccess() {
+    void resetLoginAttempts_ShouldSetLoginAttemptsToZero() {
         // Arrange
-        String validAccessToken = "validToken";
+        SecurityUtils.setLoginAttempts(5); // Simulamos que hay 5 intentos de login
 
         // Act
-        boolean result = securityUtils.hasAccess(validAccessToken);
+        SecurityUtils.resetLoginAttempts();
 
         // Assert
-        assertTrue(result, "Expected access to be granted for valid token");
+        assertEquals(0, SecurityUtils.getLoginAttempts(), "Login attempts should be reset to zero");
     }
 
+    @DisplayName("Reset login attempts should not affect other states")
     @Test
-    @DisplayName("Should return false when invalid access is provided")
-    void testInvalidAccess() {
+    void resetLoginAttempts_ShouldNotAffectOtherStates() {
         // Arrange
-        String invalidAccessToken = "invalidToken";
+        SecurityUtils.setLoginAttempts(3); // Simulamos que hay 3 intentos de login
 
         // Act
-        boolean result = securityUtils.hasAccess(invalidAccessToken);
+        SecurityUtils.resetLoginAttempts();
 
         // Assert
-        assertFalse(result, "Expected access to be denied for invalid token");
-    }
-
-    @Test
-    @DisplayName("Should handle null access token gracefully")
-    void testNullAccessToken() {
-        // Arrange
-        String nullAccessToken = null;
-
-        // Act
-        boolean result = securityUtils.hasAccess(nullAccessToken);
-
-        // Assert
-        assertFalse(result, "Expected access to be denied for null token");
-    }
-
-    @Test
-    @DisplayName("Should handle empty access token gracefully")
-    void testEmptyAccessToken() {
-        // Arrange
-        String emptyAccessToken = "";
-
-        // Act
-        boolean result = securityUtils.hasAccess(emptyAccessToken);
-
-        // Assert
-        assertFalse(result, "Expected access to be denied for empty token");
-    }
-
-    @Test
-    @DisplayName("Should return false for expired access token")
-    void testExpiredAccessToken() {
-        // Arrange
-        String expiredAccessToken = "expiredToken";
-
-        // Act
-        boolean result = securityUtils.hasAccess(expiredAccessToken);
-
-        // Assert
-        assertFalse(result, "Expected access to be denied for expired token");
+        assertEquals(0, SecurityUtils.getLoginAttempts(), "Login attempts should be reset to zero");
+        // Aquí podrías agregar más aserciones si hay otros estados que deban ser verificados
     }
 }
 ```

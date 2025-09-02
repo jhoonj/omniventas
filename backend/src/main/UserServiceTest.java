@@ -1,48 +1,38 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class UserServiceTest {
 
-    @InjectMocks
-    private UserService userService;
-
-    @Mock
-    private SomeDependency someDependency; // Reemplaza con las dependencias reales
-
-    public UserServiceTest() {
-        MockitoAnnotations.openMocks(this);
-    }
+    private final UserService userService = new UserService();
 
     @Test
-    @DisplayName("Debería procesar correctamente los datos de usuario y devolver un resultado")
-    void testProcessUserData_Success() {
+    @DisplayName("Should return formatted string when usernames are provided")
+    void testProcessUserData_WithValidUsernames_ReturnsFormattedString() {
         // Arrange
-        List<String> usernames = Arrays.asList("user1", "user2");
-        when(someDependency.someMethod(anyList())).thenReturn("Processed Data");
+        List<String> usernames = Arrays.asList("user1", "user2", "user3");
+        String expected = "user1, user2, user3";
 
         // Act
         Optional<String> result = userService.processUserData(usernames);
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals("Processed Data", result.get());
-        verify(someDependency).someMethod(usernames);
+        assertEquals(expected, result.get());
     }
 
     @Test
-    @DisplayName("Debería devolver un Optional vacío cuando la lista de usuarios está vacía")
-    void testProcessUserData_EmptyList() {
+    @DisplayName("Should return empty Optional when no usernames are provided")
+    void testProcessUserData_WithEmptyUsernames_ReturnsEmptyOptional() {
         // Arrange
         List<String> usernames = Collections.emptyList();
 
@@ -54,23 +44,23 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Debería manejar una excepción y devolver un Optional vacío en caso de error")
-    void testProcessUserData_Error() {
+    @DisplayName("Should return formatted string when single username is provided")
+    void testProcessUserData_WithSingleUsername_ReturnsFormattedString() {
         // Arrange
-        List<String> usernames = Arrays.asList("user1");
-        when(someDependency.someMethod(anyList())).thenThrow(new RuntimeException("Error processing"));
+        List<String> usernames = Collections.singletonList("user1");
+        String expected = "user1";
 
         // Act
         Optional<String> result = userService.processUserData(usernames);
 
         // Assert
-        assertFalse(result.isPresent());
-        verify(someDependency).someMethod(usernames);
+        assertTrue(result.isPresent());
+        assertEquals(expected, result.get());
     }
 
     @Test
-    @DisplayName("Debería manejar un caso de usuario nulo y devolver un Optional vacío")
-    void testProcessUserData_NullUsernames() {
+    @DisplayName("Should handle null usernames gracefully")
+    void testProcessUserData_WithNullUsernames_ReturnsEmptyOptional() {
         // Arrange
         List<String> usernames = null;
 
@@ -79,6 +69,21 @@ class UserServiceTest {
 
         // Assert
         assertFalse(result.isPresent());
+    }
+
+    @Test
+    @DisplayName("Should return formatted string with duplicates")
+    void testProcessUserData_WithDuplicateUsernames_ReturnsFormattedString() {
+        // Arrange
+        List<String> usernames = Arrays.asList("user1", "user1", "user2");
+        String expected = "user1, user1, user2";
+
+        // Act
+        Optional<String> result = userService.processUserData(usernames);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals(expected, result.get());
     }
 }
 ```
