@@ -11,14 +11,13 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
 
-@DisplayName("UserServiceTest")
 class UserServiceTest {
-
-    @Mock
-    private UserRepository userRepository;
 
     @InjectMocks
     private UserService userService;
+
+    @Mock
+    private UserRepository userRepository;
 
     @BeforeEach
     void setUp() {
@@ -30,6 +29,7 @@ class UserServiceTest {
     void testProcessUserData_Success() {
         // Arrange
         User user = new User("john.doe@example.com", "John", "Doe");
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Act
@@ -38,39 +38,53 @@ class UserServiceTest {
         // Assert
         assertNotNull(result);
         assertEquals("john.doe@example.com", result.getEmail());
-        assertEquals("John", result.getFirstName());
-        assertEquals("Doe", result.getLastName());
-        verify(userRepository, times(1)).save(user);
+        verify(userRepository).findByEmail(user.getEmail());
+        verify(userRepository).save(user);
     }
 
     @Test
-    @DisplayName("Should throw exception when user data is invalid")
-    void testProcessUserData_InvalidUser() {
+    @DisplayName("Should throw exception when user already exists")
+    void testProcessUserData_UserAlreadyExists() {
         // Arrange
-        User user = new User("", "John", "Doe"); // Invalid email
+        User user = new User("john.doe@example.com", "John", "Doe");
+        when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(user));
+        Exception exception = assertThrows(UserAlreadyExistsException.class, () -> {
+            userService.processUserData(user);
+        });
+
+        assertEquals("User already exists", exception.getMessage());
+        verify(userRepository).findByEmail(user.getEmail());
         verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    @DisplayName("Should handle user not found scenario")
-    void testProcessUserData_UserNotFound() {
-        // Arrange
-        String email = "nonexistent@example.com";
-        when(userRepository.findByEmail(email)).thenReturn(Optional.empty());
-
+    @DisplayName("Should handle null user data gracefully")
+    void testProcessUserData_NullUser() {
         // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.processUserData(email));
-        verify(userRepository, times(1)).findByEmail(email);
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.processUserData(null);
+        });
+
+        assertEquals("User cannot be null", exception.getMessage());
+        verify(userRepository, never()).findByEmail(anyString());
+        verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    @DisplayName("Should handle edge case with null user")
-    void testProcessUserData_NullUser() {
+    @DisplayName("Should handle empty email in user data")
+    void testProcessUserData_EmptyEmail() {
+        // Arrange
+        User user = new User("", "John", "Doe");
+
         // Act & Assert
-        assertThrows(NullPointerException.class, () -> userService.processUserData(null));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.processUserData(user);
+        });
+
+        assertEquals("Email cannot be empty", exception.getMessage());
+        verify(userRepository, never()).findByEmail(anyString());
         verify(userRepository, never()).save(any(User.class));
     }
 }
