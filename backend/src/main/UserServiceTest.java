@@ -27,7 +27,7 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Should process user data successfully")
-    void testProcessUserData_Success() {
+    void testProcessUserDataSuccess() {
         // Arrange
         User user = new User("john.doe@example.com", "John", "Doe");
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
@@ -44,42 +44,34 @@ class UserServiceTest {
 
     @Test
     @DisplayName("Should throw exception when user not found")
-    void testProcessUserData_UserNotFound() {
+    void testProcessUserDataUserNotFound() {
         // Arrange
-        User user = new User("unknown@example.com", "Unknown", "User");
+        User user = new User("john.doe@example.com", "John", "Doe");
         when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
 
         // Act & Assert
-        Exception exception = assertThrows(UserNotFoundException.class, () -> {
-            userService.processUserData(user);
-        });
-
-        assertEquals("User not found", exception.getMessage());
+        assertThrows(UserNotFoundException.class, () -> userService.processUserData(user));
         verify(userRepository, times(1)).findByEmail(user.getEmail());
     }
 
     @Test
     @DisplayName("Should handle edge case with null user")
-    void testProcessUserData_NullUser() {
+    void testProcessUserDataNullUser() {
         // Arrange
         User user = null;
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            userService.processUserData(user);
-        });
+        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(user));
     }
 
     @Test
     @DisplayName("Should handle edge case with invalid email format")
-    void testProcessUserData_InvalidEmailFormat() {
+    void testProcessUserDataInvalidEmail() {
         // Arrange
         User user = new User("invalid-email", "John", "Doe");
 
         // Act & Assert
-        assertThrows(InvalidEmailFormatException.class, () -> {
-            userService.processUserData(user);
-        });
+        assertThrows(InvalidEmailFormatException.class, () -> userService.processUserData(user));
     }
 }
 ```

@@ -1,74 +1,42 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.BeforeEach;
 
-@DisplayName("Tests for SecurityUtils")
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 class SecurityUtilsTest {
 
-    private SecurityUtils securityUtils;
+    private final SecurityUtils securityUtils = new SecurityUtils();
 
-    @BeforeEach
-    void setUp() {
-        securityUtils = new SecurityUtils();
-    }
-
+    @DisplayName("Debería incrementar el número de intentos de inicio de sesión")
     @Test
-    @DisplayName("Test successful removal of backdoor access")
-    void testRemoveBackdoorAccess_Success() {
+    void shouldIncrementLoginAttempts() {
         // Arrange
-        // Setup any necessary state or mocks here
+        int initialAttempts = securityUtils.getLoginAttempts(); // Suponiendo que hay un método para obtener los intentos
 
         // Act
-        // Call the method to test
-        boolean result = securityUtils.removeBackdoorAccess();
+        securityUtils.incrementLoginAttempts();
 
         // Assert
-        assertTrue(result, "Expected backdoor access to be removed successfully");
+        assertEquals(initialAttempts + 1, securityUtils.getLoginAttempts());
     }
 
+    @DisplayName("Debería manejar múltiples incrementos de intentos de inicio de sesión de manera segura")
     @Test
-    @DisplayName("Test removal of backdoor access when no access exists")
-    void testRemoveBackdoorAccess_NoAccess() {
+    void shouldHandleMultipleLoginAttemptsSafely() throws InterruptedException {
         // Arrange
-        // Setup state where no backdoor access exists
+        int initialAttempts = securityUtils.getLoginAttempts();
+        Thread thread1 = new Thread(securityUtils::incrementLoginAttempts);
+        Thread thread2 = new Thread(securityUtils::incrementLoginAttempts);
 
         // Act
-        boolean result = securityUtils.removeBackdoorAccess();
+        thread1.start();
+        thread2.start();
+        thread1.join();
+        thread2.join();
 
         // Assert
-        assertFalse(result, "Expected no change when no backdoor access exists");
-    }
-
-    @Test
-    @DisplayName("Test error handling during removal of backdoor access")
-    void testRemoveBackdoorAccess_Error() {
-        // Arrange
-        // Setup state that simulates an error condition
-
-        // Act
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            securityUtils.removeBackdoorAccess();
-        });
-
-        // Assert
-        assertNotNull(exception, "Expected an exception to be thrown during removal");
-    }
-
-    @Test
-    @DisplayName("Test edge case for removal of backdoor access")
-    void testRemoveBackdoorAccess_EdgeCase() {
-        // Arrange
-        // Setup any edge case scenario
-
-        // Act
-        boolean result = securityUtils.removeBackdoorAccess();
-
-        // Assert
-        assertFalse(result, "Expected no change during edge case scenario");
+        assertEquals(initialAttempts + 2, securityUtils.getLoginAttempts());
     }
 }
 ```
