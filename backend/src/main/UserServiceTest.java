@@ -1,73 +1,85 @@
 ```java
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
+import org.junit.jupiter.api.BeforeEach;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+public class UserServiceTest {
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+    @InjectMocks
+    private UserService userService;
 
-@DisplayName("UserService Test")
-class UserServiceTest {
+    @Mock
+    private UserRepository userRepository; // Suponiendo que hay un repositorio de usuarios
 
-    private final UserService userService = new UserService();
-
-    @Test
-    @DisplayName("Debería procesar datos de usuario correctamente")
-    void shouldProcessUserDataSuccessfully() {
-        // Arrange
-        List<String> usernames = Arrays.asList("user1", "user2", "user3");
-
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals("Processed: user1, user2, user3", result.get());
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @DisplayName("Debería retornar vacío cuando la lista de usuarios está vacía")
-    void shouldReturnEmptyWhenUsernamesListIsEmpty() {
+    @DisplayName("Debería retornar el email del usuario dado un nombre de usuario válido")
+    public void testGetUserEmail_Success() {
         // Arrange
-        List<String> usernames = Collections.emptyList();
+        String username = "validUser";
+        String expectedEmail = "validUser@example.com";
+        when(userRepository.findEmailByUsername(username)).thenReturn(expectedEmail);
 
         // Act
-        Optional<String> result = userService.processUserData(usernames);
+        String actualEmail = userService.getUserEmail(username);
 
         // Assert
-        assertTrue(result.isEmpty());
+        assertEquals(expectedEmail, actualEmail);
+        verify(userRepository, times(1)).findEmailByUsername(username);
     }
 
     @Test
-    @DisplayName("Debería retornar vacío cuando la lista de usuarios es nula")
-    void shouldReturnEmptyWhenUsernamesListIsNull() {
+    @DisplayName("Debería lanzar una excepción cuando el nombre de usuario no existe")
+    public void testGetUserEmail_UserNotFound() {
         // Arrange
-        List<String> usernames = null;
+        String username = "nonExistentUser";
+        when(userRepository.findEmailByUsername(username)).thenReturn(null);
 
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
+        // Act & Assert
+        Exception exception = assertThrows(UserNotFoundException.class, () -> {
+            userService.getUserEmail(username);
+        });
 
-        // Assert
-        assertTrue(result.isEmpty());
+        assertEquals("Usuario no encontrado", exception.getMessage());
+        verify(userRepository, times(1)).findEmailByUsername(username);
     }
 
     @Test
-    @DisplayName("Debería manejar nombres de usuario con espacios en blanco")
-    void shouldHandleUsernamesWithWhitespace() {
+    @DisplayName("Debería lanzar una excepción cuando el nombre de usuario es nulo")
+    public void testGetUserEmail_NullUsername() {
         // Arrange
-        List<String> usernames = Arrays.asList(" user1 ", " user2 ", " user3 ");
+        String username = null;
 
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
+        // Act & Assert
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.getUserEmail(username);
+        });
 
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals("Processed: user1, user2, user3", result.get());
+        assertEquals("El nombre de usuario no puede ser nulo", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Debería lanzar una excepción cuando el nombre de usuario está vacío")
+    public void testGetUserEmail_EmptyUsername() {
+        // Arrange
+        String username = "";
+
+        // Act & Assert
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.getUserEmail(username);
+        });
+
+        assertEquals("El nombre de usuario no puede estar vacío", exception.getMessage());
     }
 }
 ```
