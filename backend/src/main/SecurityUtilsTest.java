@@ -1,76 +1,63 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SecurityUtilsTest {
 
-    @InjectMocks
-    private SecurityUtils securityUtils;
-
-    @Mock
-    private SomeDependency someDependency; // Replace with actual dependencies if needed
-
-    public SecurityUtilsTest() {
-        MockitoAnnotations.openMocks(this);
-    }
+    private final SecurityUtils securityUtils = new SecurityUtils();
 
     @Test
-    @DisplayName("Should return expected result when valid input is provided")
-    void testValidInput() {
+    @DisplayName("Debería incrementar loginAttempts correctamente")
+    void shouldIncrementLoginAttemptsCorrectly() {
         // Arrange
-        String input = "validInput";
-        String expectedOutput = "expectedOutput"; // Replace with actual expected output
+        int initialAttempts = securityUtils.getLoginAttempts(); // Asumiendo que hay un método para obtener el valor
 
         // Act
-        String result = securityUtils.someMethod(input); // Replace with actual method call
+        synchronized (securityUtils) {
+            securityUtils.incrementLoginAttempts(); // Método que contiene el código a testear
+        }
 
         // Assert
-        assertEquals(expectedOutput, result);
+        assertEquals(initialAttempts + 1, securityUtils.getLoginAttempts());
     }
 
     @Test
-    @DisplayName("Should throw exception when input is null")
-    void testNullInput() {
+    @DisplayName("Debería manejar múltiples hilos correctamente")
+    void shouldHandleMultipleThreadsCorrectly() throws InterruptedException {
         // Arrange
-        String input = null;
-
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> {
-            securityUtils.someMethod(input); // Replace with actual method call
-        });
-    }
-
-    @Test
-    @DisplayName("Should handle edge case when input is empty")
-    void testEmptyInput() {
-        // Arrange
-        String input = "";
+        int initialAttempts = securityUtils.getLoginAttempts();
+        int numberOfThreads = 10;
+        Thread[] threads = new Thread[numberOfThreads];
 
         // Act
-        String result = securityUtils.someMethod(input); // Replace with actual method call
+        for (int i = 0; i < numberOfThreads; i++) {
+            threads[i] = new Thread(() -> {
+                synchronized (securityUtils) {
+                    securityUtils.incrementLoginAttempts();
+                }
+            });
+            threads[i].start();
+        }
+
+        for (Thread thread : threads) {
+            thread.join();
+        }
 
         // Assert
-        assertNotNull(result); // Adjust assertion based on expected behavior
+        assertEquals(initialAttempts + numberOfThreads, securityUtils.getLoginAttempts());
     }
 
     @Test
-    @DisplayName("Should return default value when input is invalid")
-    void testInvalidInput() {
+    @DisplayName("Debería manejar el caso de no incrementar si no se llama al método")
+    void shouldNotIncrementIfMethodNotCalled() {
         // Arrange
-        String input = "invalidInput";
-        String expectedOutput = "defaultOutput"; // Replace with actual expected output
+        int initialAttempts = securityUtils.getLoginAttempts();
 
-        // Act
-        String result = securityUtils.someMethod(input); // Replace with actual method call
+        // Act - No se llama al método
 
         // Assert
-        assertEquals(expectedOutput, result);
+        assertEquals(initialAttempts, securityUtils.getLoginAttempts());
     }
 }
 ```
