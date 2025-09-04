@@ -11,6 +11,7 @@ import org.mockito.MockitoAnnotations;
 
 import java.util.Optional;
 
+@DisplayName("UserService Test")
 class UserServiceTest {
 
     @Mock
@@ -28,41 +29,50 @@ class UserServiceTest {
     @DisplayName("Should process user data successfully")
     void testProcessUserData_Success() {
         // Arrange
-        User user = new User(1L, "test@example.com", "Test User");
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        User user = new User("john.doe@example.com", "John", "Doe");
+        when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Act
-        User result = userService.processUserData(1L);
+        User result = userService.processUserData(user);
 
         // Assert
         assertNotNull(result);
-        assertEquals("Test User", result.getName());
-        verify(userRepository, times(1)).findById(1L);
+        assertEquals("john.doe@example.com", result.getEmail());
+        verify(userRepository, times(1)).save(user);
     }
 
     @Test
-    @DisplayName("Should throw exception when user not found")
+    @DisplayName("Should throw exception when user data is invalid")
+    void testProcessUserData_InvalidUser() {
+        // Arrange
+        User user = new User("", "John", "Doe"); // Invalid email
+
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(user));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Should handle edge case with null user")
+    void testProcessUserData_NullUser() {
+        // Arrange
+        User user = null;
+
+        // Act & Assert
+        assertThrows(NullPointerException.class, () -> userService.processUserData(user));
+        verify(userRepository, never()).save(any(User.class));
+    }
+
+    @Test
+    @DisplayName("Should handle user not found case")
     void testProcessUserData_UserNotFound() {
         // Arrange
-        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        User user = new User("jane.doe@example.com", "Jane", "Doe");
+        when(userRepository.findByEmail("jane.doe@example.com")).thenReturn(Optional.empty());
 
         // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.processUserData(1L));
-        verify(userRepository, times(1)).findById(1L);
-    }
-
-    @Test
-    @DisplayName("Should handle edge case with null user ID")
-    void testProcessUserData_NullUserId() {
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(null));
-    }
-
-    @Test
-    @DisplayName("Should handle edge case with negative user ID")
-    void testProcessUserData_NegativeUserId() {
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(-1L));
+        assertThrows(UserNotFoundException.class, () -> userService.processUserData(user));
+        verify(userRepository, times(1)).findByEmail("jane.doe@example.com");
     }
 }
 ```

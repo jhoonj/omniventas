@@ -1,60 +1,25 @@
 ```java
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
 
+@DisplayName("Pruebas unitarias para la clase SecurityUtils")
 class SecurityUtilsTest {
 
-    @InjectMocks
-    private SecurityUtils securityUtils;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
-    @DisplayName("Should remove backdoor access successfully")
-    void testRemoveBackdoorAccess_Success() {
+    @DisplayName("Debería eliminar el método backdoorAccess")
+    void testRemoveBackdoorAccess() {
         // Arrange
-        // Setup any necessary state or mocks here
+        // No hay configuración necesaria ya que el método ha sido eliminado.
 
         // Act
-        boolean result = securityUtils.removeBackdoorAccess();
+        // No hay acción que realizar ya que el método no existe.
 
         // Assert
-        assertTrue(result, "Expected backdoor access to be removed successfully");
-    }
-
-    @Test
-    @DisplayName("Should handle error when removing backdoor access")
-    void testRemoveBackdoorAccess_Error() {
-        // Arrange
-        // Setup any necessary state or mocks here to simulate an error
-
-        // Act
-        boolean result = securityUtils.removeBackdoorAccess();
-
-        // Assert
-        assertFalse(result, "Expected backdoor access removal to fail");
-    }
-
-    @Test
-    @DisplayName("Should handle edge case when backdoor access is already removed")
-    void testRemoveBackdoorAccess_AlreadyRemoved() {
-        // Arrange
-        // Setup any necessary state or mocks here to simulate already removed state
-
-        // Act
-        boolean result = securityUtils.removeBackdoorAccess();
-
-        // Assert
-        assertFalse(result, "Expected backdoor access removal to indicate it was already removed");
+        // Verificamos que el método no existe lanzando una excepción al intentar acceder a él.
+        assertThrows(NoSuchMethodException.class, () -> {
+            SecurityUtils.class.getMethod("backdoorAccess");
+        });
     }
 }
 ```
