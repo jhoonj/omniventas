@@ -1,85 +1,68 @@
 ```java
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-import org.mockito.Mockito;
-
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Optional;
-
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.Optional;
+
 class UserServiceTest {
 
-    private final UserService userService = new UserService();
+    @Mock
+    private UserRepository userRepository;
 
-    @Test
-    @DisplayName("Should return formatted string when usernames are provided")
-    void shouldReturnFormattedStringWhenUsernamesAreProvided() {
-        // Arrange
-        List<String> usernames = Arrays.asList("user1", "user2", "user3");
+    @InjectMocks
+    private UserService userService;
 
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals("user1, user2, user3", result.get());
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @DisplayName("Should return empty when no usernames are provided")
-    void shouldReturnEmptyWhenNoUsernamesAreProvided() {
+    @DisplayName("Should process user data successfully")
+    void testProcessUserData_Success() {
         // Arrange
-        List<String> usernames = Collections.emptyList();
+        User user = new User(1L, "test@example.com", "Test User");
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
 
         // Act
-        Optional<String> result = userService.processUserData(usernames);
+        User result = userService.processUserData(1L);
 
         // Assert
-        assertFalse(result.isPresent());
+        assertNotNull(result);
+        assertEquals("Test User", result.getName());
+        verify(userRepository, times(1)).findById(1L);
     }
 
     @Test
-    @DisplayName("Should handle null usernames gracefully")
-    void shouldHandleNullUsernamesGracefully() {
+    @DisplayName("Should throw exception when user not found")
+    void testProcessUserData_UserNotFound() {
         // Arrange
-        List<String> usernames = null;
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
 
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertFalse(result.isPresent());
+        // Act & Assert
+        assertThrows(UserNotFoundException.class, () -> userService.processUserData(1L));
+        verify(userRepository, times(1)).findById(1L);
     }
 
     @Test
-    @DisplayName("Should return formatted string with single username")
-    void shouldReturnFormattedStringWithSingleUsername() {
-        // Arrange
-        List<String> usernames = Collections.singletonList("user1");
-
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals("user1", result.get());
+    @DisplayName("Should handle edge case with null user ID")
+    void testProcessUserData_NullUserId() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(null));
     }
 
     @Test
-    @DisplayName("Should return formatted string with usernames containing special characters")
-    void shouldReturnFormattedStringWithUsernamesContainingSpecialCharacters() {
-        // Arrange
-        List<String> usernames = Arrays.asList("user@1", "user#2", "user$3");
-
-        // Act
-        Optional<String> result = userService.processUserData(usernames);
-
-        // Assert
-        assertTrue(result.isPresent());
-        assertEquals("user@1, user#2, user$3", result.get());
+    @DisplayName("Should handle edge case with negative user ID")
+    void testProcessUserData_NegativeUserId() {
+        // Act & Assert
+        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(-1L));
     }
 }
 ```
