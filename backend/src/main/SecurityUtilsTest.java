@@ -1,73 +1,53 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.junit.jupiter.api.Assertions.*;
 
+@DisplayName("Pruebas unitarias para la clase SecurityUtils")
 class SecurityUtilsTest {
 
-    @InjectMocks
-    private SecurityUtils securityUtils;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
-    @DisplayName("Test successful removal of backdoor access")
+    @DisplayName("Debería eliminar el acceso backdoor correctamente")
     void testRemoveBackdoorAccess_Success() {
         // Arrange
-        // Setup any necessary state or mocks
+        SecurityUtils securityUtils = new SecurityUtils();
+        // Configurar el estado inicial si es necesario
 
         // Act
         boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertTrue(result, "Expected backdoor access to be removed successfully");
+        assertTrue(result, "El acceso backdoor debería ser eliminado exitosamente.");
     }
 
     @Test
-    @DisplayName("Test removal of backdoor access when it does not exist")
-    void testRemoveBackdoorAccess_NoBackdoor() {
+    @DisplayName("Debería manejar el error al intentar eliminar el acceso backdoor")
+    void testRemoveBackdoorAccess_Error() {
         // Arrange
-        // Setup any necessary state or mocks
+        SecurityUtils securityUtils = new SecurityUtils();
+        // Configurar el estado inicial para simular un error
 
         // Act
-        boolean result = securityUtils.removeBackdoorAccess();
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            securityUtils.removeBackdoorAccess();
+        });
 
         // Assert
-        assertFalse(result, "Expected no backdoor access to be removed");
+        assertEquals("Error al eliminar el acceso backdoor", exception.getMessage());
     }
 
     @Test
-    @DisplayName("Test removal of backdoor access with invalid state")
-    void testRemoveBackdoorAccess_InvalidState() {
-        // Arrange
-        // Setup any necessary state or mocks
-
-        // Act
-        boolean result = securityUtils.removeBackdoorAccess();
-
-        // Assert
-        assertFalse(result, "Expected removal to fail due to invalid state");
-    }
-
-    @Test
-    @DisplayName("Test edge case for removal of backdoor access")
+    @DisplayName("Debería manejar el caso límite al eliminar el acceso backdoor")
     void testRemoveBackdoorAccess_EdgeCase() {
         // Arrange
-        // Setup any necessary state or mocks
+        SecurityUtils securityUtils = new SecurityUtils();
+        // Configurar el estado inicial para un caso límite
 
         // Act
         boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertTrue(result, "Expected edge case to handle backdoor access removal correctly");
+        assertFalse(result, "El acceso backdoor no debería ser eliminado en un caso límite.");
     }
 }
 ```
