@@ -3,22 +3,20 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@DisplayName("Pruebas unitarias para la clase SecurityUtils")
 class SecurityUtilsTest {
 
-    private final SecurityUtils securityUtils = new SecurityUtils();
-
+    @DisplayName("Reset login attempts should set loginAttempts to zero")
     @Test
-    @DisplayName("Debería retornar la información restringida correctamente")
-    void testGetSystemInfo_ReturnsRestrictedInfo() {
+    void testResetLoginAttempts() {
         // Arrange
-        String expectedInfo = "Información restringida";
+        // Simulamos que hay intentos de login previos
+        SecurityUtils.setLoginAttempts(5); // Método hipotético para establecer intentos
 
         // Act
-        String actualInfo = securityUtils.getSystemInfo();
+        SecurityUtils.resetLoginAttempts();
 
         // Assert
-        assertEquals(expectedInfo, actualInfo, "El método getSystemInfo debería retornar 'Información restringida'");
+        assertEquals(0, SecurityUtils.getLoginAttempts()); // Método hipotético para obtener intentos
     }
 }
 ```

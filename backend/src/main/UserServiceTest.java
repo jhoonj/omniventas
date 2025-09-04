@@ -1,48 +1,38 @@
 ```java
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@DisplayName("UserService Test")
 class UserServiceTest {
 
-    @InjectMocks
-    private UserService userService;
-
-    @Mock
-    private SomeDependency someDependency; // Reemplazar con la dependencia real si es necesario
-
-    public UserServiceTest() {
-        MockitoAnnotations.openMocks(this);
-    }
+    private final UserService userService = new UserService();
 
     @Test
-    @DisplayName("Debería procesar datos de usuario exitosamente")
-    void testProcessUserData_Success() {
+    @DisplayName("Debería procesar datos de usuario correctamente")
+    void shouldProcessUserDataSuccessfully() {
         // Arrange
-        List<String> usernames = Arrays.asList("user1", "user2");
-        when(someDependency.process(usernames)).thenReturn(Optional.of("Processed Data"));
+        List<String> usernames = Arrays.asList("user1", "user2", "user3");
 
         // Act
         Optional<String> result = userService.processUserData(usernames);
 
         // Assert
         assertTrue(result.isPresent());
-        assertEquals("Processed Data", result.get());
-        verify(someDependency, times(1)).process(usernames);
+        assertEquals("Processed: user1, user2, user3", result.get());
     }
 
     @Test
-    @DisplayName("Debería retornar vacío cuando no se proporcionan nombres de usuario")
-    void testProcessUserData_EmptyUsernames() {
+    @DisplayName("Debería retornar vacío cuando la lista de usuarios está vacía")
+    void shouldReturnEmptyWhenUsernamesListIsEmpty() {
         // Arrange
         List<String> usernames = Collections.emptyList();
 
@@ -50,39 +40,34 @@ class UserServiceTest {
         Optional<String> result = userService.processUserData(usernames);
 
         // Assert
-        assertFalse(result.isPresent());
-        verify(someDependency, never()).process(any());
+        assertTrue(result.isEmpty());
     }
 
     @Test
-    @DisplayName("Debería manejar excepción al procesar datos de usuario")
-    void testProcessUserData_Exception() {
+    @DisplayName("Debería retornar vacío cuando la lista de usuarios es nula")
+    void shouldReturnEmptyWhenUsernamesListIsNull() {
         // Arrange
-        List<String> usernames = Arrays.asList("user1");
-        when(someDependency.process(usernames)).thenThrow(new RuntimeException("Error processing"));
-
-        // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            userService.processUserData(usernames);
-        });
-
-        assertEquals("Error processing", exception.getMessage());
-        verify(someDependency, times(1)).process(usernames);
-    }
-
-    @Test
-    @DisplayName("Debería retornar vacío cuando se procesan nombres de usuario inválidos")
-    void testProcessUserData_InvalidUsernames() {
-        // Arrange
-        List<String> usernames = Arrays.asList("invalid_user");
-        when(someDependency.process(usernames)).thenReturn(Optional.empty());
+        List<String> usernames = null;
 
         // Act
         Optional<String> result = userService.processUserData(usernames);
 
         // Assert
-        assertFalse(result.isPresent());
-        verify(someDependency, times(1)).process(usernames);
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
+    @DisplayName("Debería manejar nombres de usuario con espacios en blanco")
+    void shouldHandleUsernamesWithWhitespace() {
+        // Arrange
+        List<String> usernames = Arrays.asList(" user1 ", " user2 ", " user3 ");
+
+        // Act
+        Optional<String> result = userService.processUserData(usernames);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals("Processed: user1, user2, user3", result.get());
     }
 }
 ```
