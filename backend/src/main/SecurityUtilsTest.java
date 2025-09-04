@@ -1,42 +1,75 @@
 ```java
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 
 class SecurityUtilsTest {
 
-    private final SecurityUtils securityUtils = new SecurityUtils();
+    @InjectMocks
+    private SecurityUtils securityUtils;
 
-    @DisplayName("Debería incrementar el número de intentos de inicio de sesión")
-    @Test
-    void shouldIncrementLoginAttempts() {
-        // Arrange
-        int initialAttempts = securityUtils.getLoginAttempts(); // Suponiendo que hay un método para obtener los intentos
-
-        // Act
-        securityUtils.incrementLoginAttempts();
-
-        // Assert
-        assertEquals(initialAttempts + 1, securityUtils.getLoginAttempts());
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
     }
 
-    @DisplayName("Debería manejar múltiples incrementos de intentos de inicio de sesión de manera segura")
     @Test
-    void shouldHandleMultipleLoginAttemptsSafely() throws InterruptedException {
+    @DisplayName("Test successful removal of backdoor access")
+    void testRemoveBackdoorAccess_Success() {
         // Arrange
-        int initialAttempts = securityUtils.getLoginAttempts();
-        Thread thread1 = new Thread(securityUtils::incrementLoginAttempts);
-        Thread thread2 = new Thread(securityUtils::incrementLoginAttempts);
+        // Setup any necessary state or mocks here
 
         // Act
-        thread1.start();
-        thread2.start();
-        thread1.join();
-        thread2.join();
+        boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertEquals(initialAttempts + 2, securityUtils.getLoginAttempts());
+        assertTrue(result, "Expected backdoor access to be removed successfully");
+    }
+
+    @Test
+    @DisplayName("Test removal of backdoor access when already removed")
+    void testRemoveBackdoorAccess_AlreadyRemoved() {
+        // Arrange
+        // Setup any necessary state or mocks here
+
+        // Act
+        boolean result = securityUtils.removeBackdoorAccess();
+
+        // Assert
+        assertFalse(result, "Expected backdoor access to not be removed again");
+    }
+
+    @Test
+    @DisplayName("Test removal of backdoor access with invalid state")
+    void testRemoveBackdoorAccess_InvalidState() {
+        // Arrange
+        // Setup any necessary state or mocks here
+
+        // Act
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            securityUtils.removeBackdoorAccess();
+        });
+
+        // Assert
+        assertEquals("Invalid state for removing backdoor access", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Test edge case for removal of backdoor access")
+    void testRemoveBackdoorAccess_EdgeCase() {
+        // Arrange
+        // Setup any necessary state or mocks here
+
+        // Act
+        boolean result = securityUtils.removeBackdoorAccess();
+
+        // Assert
+        assertFalse(result, "Expected edge case to handle backdoor access removal gracefully");
     }
 }
 ```
