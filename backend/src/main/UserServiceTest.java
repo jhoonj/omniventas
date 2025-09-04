@@ -9,16 +9,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.util.Optional;
-
-@DisplayName("UserService Test")
 class UserServiceTest {
-
-    @Mock
-    private UserRepository userRepository;
 
     @InjectMocks
     private UserService userService;
+
+    @Mock
+    private UserRepository userRepository; // Assuming UserRepository is the dependency
 
     @BeforeEach
     void setUp() {
@@ -48,7 +45,11 @@ class UserServiceTest {
         User user = new User("", "John", "Doe"); // Invalid email
 
         // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(user));
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            userService.processUserData(user);
+        });
+
+        assertEquals("Invalid user data", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
@@ -59,20 +60,28 @@ class UserServiceTest {
         User user = null;
 
         // Act & Assert
-        assertThrows(NullPointerException.class, () -> userService.processUserData(user));
+        Exception exception = assertThrows(NullPointerException.class, () -> {
+            userService.processUserData(user);
+        });
+
+        assertEquals("User cannot be null", exception.getMessage());
         verify(userRepository, never()).save(any(User.class));
     }
 
     @Test
-    @DisplayName("Should handle user not found case")
-    void testProcessUserData_UserNotFound() {
+    @DisplayName("Should handle unexpected errors during processing")
+    void testProcessUserData_UnexpectedError() {
         // Arrange
-        User user = new User("jane.doe@example.com", "Jane", "Doe");
-        when(userRepository.findByEmail("jane.doe@example.com")).thenReturn(Optional.empty());
+        User user = new User("john.doe@example.com", "John", "Doe");
+        when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("Database error"));
 
         // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.processUserData(user));
-        verify(userRepository, times(1)).findByEmail("jane.doe@example.com");
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            userService.processUserData(user);
+        });
+
+        assertEquals("Database error", exception.getMessage());
+        verify(userRepository, times(1)).save(user);
     }
 }
 ```
