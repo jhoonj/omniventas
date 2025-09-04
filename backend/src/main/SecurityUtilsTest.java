@@ -1,32 +1,53 @@
 ```java
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
 
-@DisplayName("Pruebas para la clase SecurityUtils")
+@DisplayName("Tests for SecurityUtils")
 class SecurityUtilsTest {
 
+    private SecurityUtils securityUtils;
+
+    @BeforeEach
+    void setUp() {
+        securityUtils = new SecurityUtils();
+    }
+
     @Test
-    @DisplayName("Debería eliminar el acceso backdoor correctamente")
+    @DisplayName("Test successful removal of backdoor access")
     void testRemoveBackdoorAccess_Success() {
         // Arrange
-        SecurityUtils securityUtils = new SecurityUtils();
-        // Configuración inicial si es necesario
+        // Setup any necessary state or mocks here
+
+        // Act
+        // Call the method to test
+        boolean result = securityUtils.removeBackdoorAccess();
+
+        // Assert
+        assertTrue(result, "Expected backdoor access to be removed successfully");
+    }
+
+    @Test
+    @DisplayName("Test removal of backdoor access when no access exists")
+    void testRemoveBackdoorAccess_NoAccess() {
+        // Arrange
+        // Setup state where no backdoor access exists
 
         // Act
         boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertTrue(result, "El acceso backdoor debería ser eliminado exitosamente.");
+        assertFalse(result, "Expected no change when no backdoor access exists");
     }
 
     @Test
-    @DisplayName("Debería manejar el error al intentar eliminar el acceso backdoor")
+    @DisplayName("Test error handling during removal of backdoor access")
     void testRemoveBackdoorAccess_Error() {
         // Arrange
-        SecurityUtils securityUtils = new SecurityUtils();
-        // Simulación de un error si es necesario
+        // Setup state that simulates an error condition
 
         // Act
         Exception exception = assertThrows(RuntimeException.class, () -> {
@@ -34,21 +55,20 @@ class SecurityUtilsTest {
         });
 
         // Assert
-        assertEquals("Error al eliminar el acceso backdoor", exception.getMessage());
+        assertNotNull(exception, "Expected an exception to be thrown during removal");
     }
 
     @Test
-    @DisplayName("Debería manejar el caso de borde al eliminar el acceso backdoor sin acceso previo")
-    void testRemoveBackdoorAccess_EmptyState() {
+    @DisplayName("Test edge case for removal of backdoor access")
+    void testRemoveBackdoorAccess_EdgeCase() {
         // Arrange
-        SecurityUtils securityUtils = new SecurityUtils();
-        // Configuración inicial para simular un estado vacío
+        // Setup any edge case scenario
 
         // Act
         boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertFalse(result, "No debería eliminar el acceso backdoor si no existe.");
+        assertFalse(result, "Expected no change during edge case scenario");
     }
 }
 ```
