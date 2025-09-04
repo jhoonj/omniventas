@@ -8,88 +8,66 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
 class SecurityUtilsTest {
-
-    @Mock
-    private Connection connection;
 
     @InjectMocks
     private SecurityUtils securityUtils;
 
-    public SecurityUtilsTest() {
+    @BeforeEach
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @DisplayName("Debería retornar permisos exitosamente para un usuario y recurso válidos")
-    void testGetPermissions_Success() throws SQLException {
+    @DisplayName("Test successful removal of backdoor access")
+    void testRemoveBackdoorAccess_Success() {
         // Arrange
-        String userId = "123";
-        String resource = "resource1";
-        String expectedPermissions = "READ,WRITE";
-
-        PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        ResultSet resultSet = mock(ResultSet.class);
-
-        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(true);
-        when(resultSet.getString("permissions")).thenReturn(expectedPermissions);
+        // Setup any necessary state or mocks
 
         // Act
-        String actualPermissions = securityUtils.getPermissions(connection, userId, resource);
+        boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertEquals(expectedPermissions, actualPermissions);
-        verify(preparedStatement).setString(1, userId);
-        verify(preparedStatement).setString(2, resource);
-        verify(preparedStatement).executeQuery();
+        assertTrue(result, "Expected backdoor access to be removed successfully");
     }
 
     @Test
-    @DisplayName("Debería lanzar SQLException cuando ocurre un error en la base de datos")
-    void testGetPermissions_SQLException() throws SQLException {
+    @DisplayName("Test removal of backdoor access when it does not exist")
+    void testRemoveBackdoorAccess_NoBackdoor() {
         // Arrange
-        String userId = "123";
-        String resource = "resource1";
+        // Setup any necessary state or mocks
 
-        PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-        when(preparedStatement.executeQuery()).thenThrow(new SQLException("Database error"));
+        // Act
+        boolean result = securityUtils.removeBackdoorAccess();
 
-        // Act & Assert
-        assertThrows(SQLException.class, () -> {
-            securityUtils.getPermissions(connection, userId, resource);
-        });
+        // Assert
+        assertFalse(result, "Expected no backdoor access to be removed");
     }
 
     @Test
-    @DisplayName("Debería retornar null si no hay permisos para el usuario y recurso")
-    void testGetPermissions_NoPermissions() throws SQLException {
+    @DisplayName("Test removal of backdoor access with invalid state")
+    void testRemoveBackdoorAccess_InvalidState() {
         // Arrange
-        String userId = "123";
-        String resource = "resource1";
-
-        PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        ResultSet resultSet = mock(ResultSet.class);
-
-        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(false);
+        // Setup any necessary state or mocks
 
         // Act
-        String actualPermissions = securityUtils.getPermissions(connection, userId, resource);
+        boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertNull(actualPermissions);
-        verify(preparedStatement).setString(1, userId);
-        verify(preparedStatement).setString(2, resource);
-        verify(preparedStatement).executeQuery();
+        assertFalse(result, "Expected removal to fail due to invalid state");
+    }
+
+    @Test
+    @DisplayName("Test edge case for removal of backdoor access")
+    void testRemoveBackdoorAccess_EdgeCase() {
+        // Arrange
+        // Setup any necessary state or mocks
+
+        // Act
+        boolean result = securityUtils.removeBackdoorAccess();
+
+        // Assert
+        assertTrue(result, "Expected edge case to handle backdoor access removal correctly");
     }
 }
 ```

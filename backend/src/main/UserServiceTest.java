@@ -9,80 +9,71 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-public class UserServiceTest {
+@DisplayName("UserService Test")
+class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
 
     @Mock
-    private UserRepository userRepository; // Suponiendo que existe un UserRepository
+    private UserRepository userRepository; // Assuming there's a UserRepository
 
     @BeforeEach
-    public void setUp() {
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @DisplayName("Debería retornar el email del usuario dado un nombre de usuario válido")
-    public void testGetUserEmail_Success() {
+    @DisplayName("Should return formatted string for valid user data")
+    void testProcessUserData_Success() {
         // Arrange
-        String username = "validUser";
-        String expectedEmail = "validUser@example.com";
-        User user = new User(username, expectedEmail); // Suponiendo que existe una clase User
-
-        when(userRepository.findByUsername(username)).thenReturn(user);
+        User user = new User("John", "Doe", "john.doe@example.com");
+        when(userRepository.findUserById(1)).thenReturn(Optional.of(user));
 
         // Act
-        String actualEmail = userService.getUserEmail(username);
+        String result = userService.processUserData(1);
 
         // Assert
-        assertEquals(expectedEmail, actualEmail);
-        verify(userRepository, times(1)).findByUsername(username);
+        assertEquals("User: John Doe, Email: john.doe@example.com", result);
     }
 
     @Test
-    @DisplayName("Debería lanzar una excepción cuando el nombre de usuario no existe")
-    public void testGetUserEmail_UserNotFound() {
+    @DisplayName("Should throw exception when user not found")
+    void testProcessUserData_UserNotFound() {
         // Arrange
-        String username = "nonExistentUser";
-
-        when(userRepository.findByUsername(username)).thenReturn(null);
+        when(userRepository.findUserById(1)).thenReturn(Optional.empty());
 
         // Act & Assert
         Exception exception = assertThrows(UserNotFoundException.class, () -> {
-            userService.getUserEmail(username);
+            userService.processUserData(1);
         });
-
         assertEquals("User not found", exception.getMessage());
-        verify(userRepository, times(1)).findByUsername(username);
     }
 
     @Test
-    @DisplayName("Debería lanzar una excepción cuando el nombre de usuario es nulo")
-    public void testGetUserEmail_NullUsername() {
+    @DisplayName("Should handle edge case with null user ID")
+    void testProcessUserData_NullUserId() {
         // Arrange
-        String username = null;
+        Integer userId = null;
 
         // Act & Assert
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.getUserEmail(username);
+            userService.processUserData(userId);
         });
-
-        assertEquals("Username cannot be null", exception.getMessage());
+        assertEquals("User ID cannot be null", exception.getMessage());
     }
 
     @Test
-    @DisplayName("Debería lanzar una excepción cuando el nombre de usuario está vacío")
-    public void testGetUserEmail_EmptyUsername() {
+    @DisplayName("Should handle edge case with negative user ID")
+    void testProcessUserData_NegativeUserId() {
         // Arrange
-        String username = "";
+        int userId = -1;
 
         // Act & Assert
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.getUserEmail(username);
+            userService.processUserData(userId);
         });
-
-        assertEquals("Username cannot be empty", exception.getMessage());
+        assertEquals("User ID must be positive", exception.getMessage());
     }
 }
 ```
