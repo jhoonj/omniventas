@@ -9,80 +9,68 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
-class UserServiceTest {
+public class UserServiceTest {
 
     @InjectMocks
     private UserService userService;
 
     @Mock
-    private UserRepository userRepository; // Assuming UserRepository is the repository used in UserService
+    private UserRepository userRepository; // Asumiendo que hay un repositorio para manejar usuarios
 
     @BeforeEach
-    void setUp() {
+    public void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
     @Test
-    @DisplayName("Should process user data successfully")
-    void testProcessUserDataSuccess() {
+    @DisplayName("Debería retornar el email del usuario dado un nombre de usuario válido")
+    public void testGetUserEmail_Success() {
         // Arrange
-        User user = new User("test@example.com", "Test User"); // Assuming User is the entity class
-        when(userRepository.save(any(User.class))).thenReturn(user);
+        String username = "validUser";
+        String expectedEmail = "validUser@example.com";
+        User user = new User(username, expectedEmail); // Asumiendo que hay una clase User
+
+        when(userRepository.findByUsername(username)).thenReturn(user);
 
         // Act
-        User result = userService.processUserData(user);
+        String actualEmail = userService.getUserEmail(username);
 
         // Assert
-        assertNotNull(result);
-        assertEquals("test@example.com", result.getEmail());
-        assertEquals("Test User", result.getName());
-        verify(userRepository, times(1)).save(user);
+        assertEquals(expectedEmail, actualEmail);
+        verify(userRepository, times(1)).findByUsername(username);
     }
 
     @Test
-    @DisplayName("Should throw exception when user data is invalid")
-    void testProcessUserDataInvalidUser() {
+    @DisplayName("Debería lanzar una excepción cuando el usuario no existe")
+    public void testGetUserEmail_UserNotFound() {
         // Arrange
-        User user = new User("", ""); // Invalid user data
+        String username = "nonExistentUser";
+
+        when(userRepository.findByUsername(username)).thenReturn(null);
 
         // Act & Assert
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.processUserData(user);
-        });
-
-        assertEquals("User data is invalid", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        assertThrows(UserNotFoundException.class, () -> userService.getUserEmail(username));
+        verify(userRepository, times(1)).findByUsername(username);
     }
 
     @Test
-    @DisplayName("Should handle edge case with null user")
-    void testProcessUserDataNullUser() {
+    @DisplayName("Debería manejar correctamente un nombre de usuario nulo")
+    public void testGetUserEmail_NullUsername() {
         // Arrange
-        User user = null;
+        String username = null;
 
         // Act & Assert
-        Exception exception = assertThrows(NullPointerException.class, () -> {
-            userService.processUserData(user);
-        });
-
-        assertEquals("User cannot be null", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        assertThrows(IllegalArgumentException.class, () -> userService.getUserEmail(username));
     }
 
     @Test
-    @DisplayName("Should handle unexpected errors gracefully")
-    void testProcessUserDataUnexpectedError() {
+    @DisplayName("Debería manejar correctamente un nombre de usuario vacío")
+    public void testGetUserEmail_EmptyUsername() {
         // Arrange
-        User user = new User("test@example.com", "Test User");
-        when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("Database error"));
+        String username = "";
 
         // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            userService.processUserData(user);
-        });
-
-        assertEquals("Database error", exception.getMessage());
-        verify(userRepository, times(1)).save(user);
+        assertThrows(IllegalArgumentException.class, () -> userService.getUserEmail(username));
     }
 }
 ```
