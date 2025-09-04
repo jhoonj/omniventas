@@ -1,100 +1,54 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-
+@DisplayName("Pruebas para la clase SecurityUtils")
 class SecurityUtilsTest {
 
-    @Mock
-    private Connection connection;
-
-    @InjectMocks
-    private SecurityUtils securityUtils;
-
-    public SecurityUtilsTest() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
-    @DisplayName("Should return permissions for valid user and resource")
-    void testGetPermissions_Success() throws SQLException {
+    @DisplayName("Debería eliminar el acceso backdoor correctamente")
+    void testRemoveBackdoorAccess_Success() {
         // Arrange
-        String userId = "123";
-        String resource = "resource1";
-        String expectedPermissions = "READ,WRITE";
-
-        PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        ResultSet resultSet = mock(ResultSet.class);
-
-        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(true);
-        when(resultSet.getString("permissions")).thenReturn(expectedPermissions);
+        SecurityUtils securityUtils = new SecurityUtils();
+        // Configuración inicial si es necesario
 
         // Act
-        String actualPermissions = securityUtils.getPermissions(connection, userId, resource);
+        boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertEquals(expectedPermissions, actualPermissions);
-        verify(preparedStatement).setString(1, userId);
-        verify(preparedStatement).setString(2, resource);
-        verify(preparedStatement).executeQuery();
+        assertTrue(result, "El acceso backdoor debería ser eliminado exitosamente.");
     }
 
     @Test
-    @DisplayName("Should return null for user with no permissions")
-    void testGetPermissions_NoPermissions() throws SQLException {
+    @DisplayName("Debería manejar el error al intentar eliminar el acceso backdoor")
+    void testRemoveBackdoorAccess_Error() {
         // Arrange
-        String userId = "123";
-        String resource = "resource1";
-
-        PreparedStatement preparedStatement = mock(PreparedStatement.class);
-        ResultSet resultSet = mock(ResultSet.class);
-
-        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-        when(preparedStatement.executeQuery()).thenReturn(resultSet);
-        when(resultSet.next()).thenReturn(false);
+        SecurityUtils securityUtils = new SecurityUtils();
+        // Simulación de un error si es necesario
 
         // Act
-        String actualPermissions = securityUtils.getPermissions(connection, userId, resource);
-
-        // Assert
-        assertNull(actualPermissions);
-        verify(preparedStatement).setString(1, userId);
-        verify(preparedStatement).setString(2, resource);
-        verify(preparedStatement).executeQuery();
-    }
-
-    @Test
-    @DisplayName("Should throw SQLException when database error occurs")
-    void testGetPermissions_DatabaseError() throws SQLException {
-        // Arrange
-        String userId = "123";
-        String resource = "resource1";
-
-        PreparedStatement preparedStatement = mock(PreparedStatement.class);
-
-        when(connection.prepareStatement(anyString())).thenReturn(preparedStatement);
-        when(preparedStatement.executeQuery()).thenThrow(new SQLException("Database error"));
-
-        // Act & Assert
-        SQLException exception = assertThrows(SQLException.class, () -> {
-            securityUtils.getPermissions(connection, userId, resource);
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            securityUtils.removeBackdoorAccess();
         });
-        assertEquals("Database error", exception.getMessage());
-        verify(preparedStatement).setString(1, userId);
-        verify(preparedStatement).setString(2, resource);
-        verify(preparedStatement).executeQuery();
+
+        // Assert
+        assertEquals("Error al eliminar el acceso backdoor", exception.getMessage());
+    }
+
+    @Test
+    @DisplayName("Debería manejar el caso de borde al eliminar el acceso backdoor sin acceso previo")
+    void testRemoveBackdoorAccess_EmptyState() {
+        // Arrange
+        SecurityUtils securityUtils = new SecurityUtils();
+        // Configuración inicial para simular un estado vacío
+
+        // Act
+        boolean result = securityUtils.removeBackdoorAccess();
+
+        // Assert
+        assertFalse(result, "No debería eliminar el acceso backdoor si no existe.");
     }
 }
 ```
