@@ -15,7 +15,7 @@ class UserServiceTest {
     private UserService userService;
 
     @Mock
-    private UserRepository userRepository; // Assuming UserRepository is the dependency
+    private UserRepository userRepository; // Suponiendo que hay un UserRepository
 
     @BeforeEach
     void setUp() {
@@ -23,10 +23,10 @@ class UserServiceTest {
     }
 
     @Test
-    @DisplayName("Should process user data successfully")
+    @DisplayName("Debería procesar datos de usuario correctamente")
     void testProcessUserData_Success() {
         // Arrange
-        User user = new User("john.doe@example.com", "John", "Doe");
+        User user = new User("test@example.com", "Test User");
         when(userRepository.save(any(User.class))).thenReturn(user);
 
         // Act
@@ -34,45 +34,46 @@ class UserServiceTest {
 
         // Assert
         assertNotNull(result);
-        assertEquals("john.doe@example.com", result.getEmail());
+        assertEquals("test@example.com", result.getEmail());
+        assertEquals("Test User", result.getName());
         verify(userRepository, times(1)).save(user);
     }
 
     @Test
-    @DisplayName("Should throw exception when user data is invalid")
-    void testProcessUserData_InvalidUser() {
+    @DisplayName("Debería lanzar excepción cuando el usuario es nulo")
+    void testProcessUserData_NullUser() {
         // Arrange
-        User user = new User("", "John", "Doe"); // Invalid email
+        User user = null;
 
         // Act & Assert
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             userService.processUserData(user);
         });
 
-        assertEquals("Invalid user data", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        assertEquals("User cannot be null", exception.getMessage());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("Should handle edge case with null user")
-    void testProcessUserData_NullUser() {
+    @DisplayName("Debería lanzar excepción cuando el email es inválido")
+    void testProcessUserData_InvalidEmail() {
         // Arrange
-        User user = null;
+        User user = new User("invalid-email", "Test User");
 
         // Act & Assert
-        Exception exception = assertThrows(NullPointerException.class, () -> {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             userService.processUserData(user);
         });
 
-        assertEquals("User cannot be null", exception.getMessage());
-        verify(userRepository, never()).save(any(User.class));
+        assertEquals("Email is invalid", exception.getMessage());
+        verify(userRepository, never()).save(any());
     }
 
     @Test
-    @DisplayName("Should handle unexpected errors during processing")
-    void testProcessUserData_UnexpectedError() {
+    @DisplayName("Debería manejar correctamente errores al guardar el usuario")
+    void testProcessUserData_SaveError() {
         // Arrange
-        User user = new User("john.doe@example.com", "John", "Doe");
+        User user = new User("test@example.com", "Test User");
         when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("Database error"));
 
         // Act & Assert

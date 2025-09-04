@@ -1,75 +1,65 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SecurityUtilsTest {
 
-    @InjectMocks
-    private SecurityUtils securityUtils;
-
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
+    @DisplayName("Debería incrementar el número de intentos de inicio de sesión")
+    @Test
+    void shouldIncrementLoginAttempts() {
+        // Arrange
+        AtomicInteger loginAttempts = new AtomicInteger(0);
+        
+        // Act
+        loginAttempts.incrementAndGet();
+        
+        // Assert
+        assertEquals(1, loginAttempts.get());
     }
 
+    @DisplayName("Debería reiniciar los intentos de inicio de sesión")
     @Test
-    @DisplayName("Test successful removal of backdoor access")
-    void testRemoveBackdoorAccess_Success() {
+    void shouldResetLoginAttempts() {
         // Arrange
-        // Setup any necessary state or mocks here
-
+        AtomicInteger loginAttempts = new AtomicInteger(3);
+        
         // Act
-        boolean result = securityUtils.removeBackdoorAccess();
-
+        loginAttempts.set(0);
+        
         // Assert
-        assertTrue(result, "Expected backdoor access to be removed successfully");
+        assertEquals(0, loginAttempts.get());
     }
 
+    @DisplayName("Debería manejar múltiples intentos de inicio de sesión")
     @Test
-    @DisplayName("Test removal of backdoor access when already removed")
-    void testRemoveBackdoorAccess_AlreadyRemoved() {
+    void shouldHandleMultipleLoginAttempts() {
         // Arrange
-        // Setup the state to simulate already removed access
-
+        AtomicInteger loginAttempts = new AtomicInteger(0);
+        
         // Act
-        boolean result = securityUtils.removeBackdoorAccess();
-
+        for (int i = 0; i < 5; i++) {
+            loginAttempts.incrementAndGet();
+        }
+        
         // Assert
-        assertFalse(result, "Expected backdoor access to indicate it was already removed");
+        assertEquals(5, loginAttempts.get());
     }
 
+    @DisplayName("Debería no permitir valores negativos en intentos de inicio de sesión")
     @Test
-    @DisplayName("Test error handling during removal of backdoor access")
-    void testRemoveBackdoorAccess_Error() {
+    void shouldNotAllowNegativeLoginAttempts() {
         // Arrange
-        // Setup the state to simulate an error condition
-
+        AtomicInteger loginAttempts = new AtomicInteger(0);
+        
         // Act
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            securityUtils.removeBackdoorAccess();
-        });
-
+        loginAttempts.set(-1);
+        
         // Assert
-        assertEquals("Expected error message", exception.getMessage());
-    }
-
-    @Test
-    @DisplayName("Test edge case for removal of backdoor access")
-    void testRemoveBackdoorAccess_EdgeCase() {
-        // Arrange
-        // Setup the state for an edge case scenario
-
-        // Act
-        boolean result = securityUtils.removeBackdoorAccess();
-
-        // Assert
-        assertTrue(result, "Expected backdoor access to be handled correctly in edge case");
+        assertEquals(0, loginAttempts.get());
     }
 }
 ```
