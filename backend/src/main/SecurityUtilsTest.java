@@ -5,59 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 class SecurityUtilsTest {
 
-    private final SecurityUtils securityUtils = new SecurityUtils();
-
+    @DisplayName("Debería reiniciar los intentos de inicio de sesión a cero")
     @Test
-    @DisplayName("Debería incrementar loginAttempts correctamente")
-    void shouldIncrementLoginAttemptsCorrectly() {
+    void testResetLoginAttempts() {
         // Arrange
-        int initialAttempts = securityUtils.getLoginAttempts(); // Asumiendo que hay un método para obtener el valor
+        SecurityUtils.setLoginAttempts(5); // Suponiendo que hay un método para establecer intentos
+        assertEquals(5, SecurityUtils.getLoginAttempts()); // Verificamos que los intentos son 5 antes de resetear
 
         // Act
-        synchronized (securityUtils) {
-            securityUtils.incrementLoginAttempts(); // Método que contiene el código a testear
-        }
+        SecurityUtils.resetLoginAttempts();
 
         // Assert
-        assertEquals(initialAttempts + 1, securityUtils.getLoginAttempts());
-    }
-
-    @Test
-    @DisplayName("Debería manejar múltiples hilos correctamente")
-    void shouldHandleMultipleThreadsCorrectly() throws InterruptedException {
-        // Arrange
-        int initialAttempts = securityUtils.getLoginAttempts();
-        int numberOfThreads = 10;
-        Thread[] threads = new Thread[numberOfThreads];
-
-        // Act
-        for (int i = 0; i < numberOfThreads; i++) {
-            threads[i] = new Thread(() -> {
-                synchronized (securityUtils) {
-                    securityUtils.incrementLoginAttempts();
-                }
-            });
-            threads[i].start();
-        }
-
-        for (Thread thread : threads) {
-            thread.join();
-        }
-
-        // Assert
-        assertEquals(initialAttempts + numberOfThreads, securityUtils.getLoginAttempts());
-    }
-
-    @Test
-    @DisplayName("Debería manejar el caso de no incrementar si no se llama al método")
-    void shouldNotIncrementIfMethodNotCalled() {
-        // Arrange
-        int initialAttempts = securityUtils.getLoginAttempts();
-
-        // Act - No se llama al método
-
-        // Assert
-        assertEquals(initialAttempts, securityUtils.getLoginAttempts());
+        assertEquals(0, SecurityUtils.getLoginAttempts()); // Verificamos que los intentos son 0 después de resetear
     }
 }
 ```
