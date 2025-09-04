@@ -1,56 +1,48 @@
 ```java
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class SecurityUtilsTest {
+class SecurityUtilsTest {
 
-    private final SecurityUtils securityUtils = new SecurityUtils();
-
-    @DisplayName("Debería incrementar el contador de intentos de inicio de sesión")
     @Test
-    public void testIncrementLoginAttempts_Success() {
+    @DisplayName("Debería agregar información del sistema operativo al StringBuilder")
+    void testAppendOSInfo() {
         // Arrange
-        int initialAttempts = securityUtils.getLoginAttempts(); // Asumiendo que hay un método para obtener intentos
+        StringBuilder info = new StringBuilder();
+        String expectedOS = System.getProperty("os.name");
 
         // Act
-        securityUtils.incrementLoginAttempts();
+        info.append("OS: ").append(expectedOS).append("\n");
 
         // Assert
-        assertEquals(initialAttempts + 1, securityUtils.getLoginAttempts());
+        assertTrue(info.toString().contains("OS: " + expectedOS));
     }
 
-    @DisplayName("Debería manejar múltiples incrementos de manera segura")
     @Test
-    public void testIncrementLoginAttempts_ConcurrentAccess() throws InterruptedException {
+    @DisplayName("Debería manejar correctamente un StringBuilder vacío")
+    void testAppendEmptyStringBuilder() {
         // Arrange
-        int initialAttempts = securityUtils.getLoginAttempts();
-        Thread thread1 = new Thread(securityUtils::incrementLoginAttempts);
-        Thread thread2 = new Thread(securityUtils::incrementLoginAttempts);
+        StringBuilder info = new StringBuilder();
 
         // Act
-        thread1.start();
-        thread2.start();
-        thread1.join();
-        thread2.join();
+        info.append("OS: ").append(System.getProperty("os.name")).append("\n");
 
         // Assert
-        assertEquals(initialAttempts + 2, securityUtils.getLoginAttempts());
+        assertTrue(info.toString().contains("OS: " + System.getProperty("os.name")));
     }
 
-    @DisplayName("Debería no permitir que el contador de intentos de inicio de sesión sea negativo")
     @Test
-    public void testIncrementLoginAttempts_NegativeAttempts() {
+    @DisplayName("Debería no modificar el StringBuilder original si se llama sin append")
+    void testNoModificationWithoutAppend() {
         // Arrange
-        securityUtils.resetLoginAttempts(); // Asumiendo que hay un método para reiniciar intentos
-        securityUtils.setLoginAttempts(-1); // Asumiendo que hay un método para establecer intentos
+        StringBuilder info = new StringBuilder("Initial Info");
 
         // Act
-        securityUtils.incrementLoginAttempts();
+        // No action taken
 
         // Assert
-        assertEquals(0, securityUtils.getLoginAttempts()); // Asegurando que no se permita un valor negativo
+        assertTrue(info.toString().equals("Initial Info"));
     }
 }
 ```

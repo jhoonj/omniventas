@@ -1,76 +1,85 @@
 ```java
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
-
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.Mockito;
 
-public class UserServiceTest {
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
-    @InjectMocks
-    private UserService userService;
+import static org.junit.jupiter.api.Assertions.*;
 
-    @Mock
-    private UserRepository userRepository; // Asumiendo que hay un repositorio para manejar usuarios
+class UserServiceTest {
 
-    @BeforeEach
-    public void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
+    private final UserService userService = new UserService();
 
     @Test
-    @DisplayName("Debería retornar el email del usuario dado un nombre de usuario válido")
-    public void testGetUserEmail_Success() {
+    @DisplayName("Debería procesar correctamente una lista de nombres de usuario")
+    void testProcessUserData_Success() {
         // Arrange
-        String username = "validUser";
-        String expectedEmail = "validUser@example.com";
-        User user = new User(username, expectedEmail); // Asumiendo que hay una clase User
-
-        when(userRepository.findByUsername(username)).thenReturn(user);
+        List<String> usernames = Arrays.asList("user1", "user2", "user3");
 
         // Act
-        String actualEmail = userService.getUserEmail(username);
+        Optional<String> result = userService.processUserData(usernames);
 
         // Assert
-        assertEquals(expectedEmail, actualEmail);
-        verify(userRepository, times(1)).findByUsername(username);
+        assertTrue(result.isPresent());
+        assertEquals("Processed: user1, user2, user3", result.get());
     }
 
     @Test
-    @DisplayName("Debería lanzar una excepción cuando el usuario no existe")
-    public void testGetUserEmail_UserNotFound() {
+    @DisplayName("Debería retornar un Optional vacío cuando la lista de nombres de usuario está vacía")
+    void testProcessUserData_EmptyList() {
         // Arrange
-        String username = "nonExistentUser";
+        List<String> usernames = Collections.emptyList();
 
-        when(userRepository.findByUsername(username)).thenReturn(null);
+        // Act
+        Optional<String> result = userService.processUserData(usernames);
 
-        // Act & Assert
-        assertThrows(UserNotFoundException.class, () -> userService.getUserEmail(username));
-        verify(userRepository, times(1)).findByUsername(username);
+        // Assert
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Debería manejar correctamente un nombre de usuario nulo")
-    public void testGetUserEmail_NullUsername() {
+    @DisplayName("Debería retornar un Optional vacío cuando la lista de nombres de usuario es nula")
+    void testProcessUserData_NullList() {
         // Arrange
-        String username = null;
+        List<String> usernames = null;
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.getUserEmail(username));
+        // Act
+        Optional<String> result = userService.processUserData(usernames);
+
+        // Assert
+        assertFalse(result.isPresent());
     }
 
     @Test
-    @DisplayName("Debería manejar correctamente un nombre de usuario vacío")
-    public void testGetUserEmail_EmptyUsername() {
+    @DisplayName("Debería manejar nombres de usuario con espacios en blanco")
+    void testProcessUserData_WhitespaceUsernames() {
         // Arrange
-        String username = "";
+        List<String> usernames = Arrays.asList("   ", "user2", "user3");
 
-        // Act & Assert
-        assertThrows(IllegalArgumentException.class, () -> userService.getUserEmail(username));
+        // Act
+        Optional<String> result = userService.processUserData(usernames);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals("Processed: user2, user3", result.get());
+    }
+
+    @Test
+    @DisplayName("Debería manejar nombres de usuario duplicados")
+    void testProcessUserData_DuplicateUsernames() {
+        // Arrange
+        List<String> usernames = Arrays.asList("user1", "user1", "user2");
+
+        // Act
+        Optional<String> result = userService.processUserData(usernames);
+
+        // Assert
+        assertTrue(result.isPresent());
+        assertEquals("Processed: user1, user2", result.get());
     }
 }
 ```
