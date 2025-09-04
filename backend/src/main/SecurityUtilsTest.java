@@ -1,48 +1,24 @@
 ```java
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@DisplayName("Pruebas unitarias para la clase SecurityUtils")
 class SecurityUtilsTest {
 
-    @Test
-    @DisplayName("Debería agregar información del sistema operativo al StringBuilder")
-    void testAppendOSInfo() {
-        // Arrange
-        StringBuilder info = new StringBuilder();
-        String expectedOS = System.getProperty("os.name");
-
-        // Act
-        info.append("OS: ").append(expectedOS).append("\n");
-
-        // Assert
-        assertTrue(info.toString().contains("OS: " + expectedOS));
-    }
+    private final SecurityUtils securityUtils = new SecurityUtils();
 
     @Test
-    @DisplayName("Debería manejar correctamente un StringBuilder vacío")
-    void testAppendEmptyStringBuilder() {
+    @DisplayName("Debería retornar la información restringida correctamente")
+    void testGetSystemInfo_ReturnsRestrictedInfo() {
         // Arrange
-        StringBuilder info = new StringBuilder();
+        String expectedInfo = "Información restringida";
 
         // Act
-        info.append("OS: ").append(System.getProperty("os.name")).append("\n");
+        String actualInfo = securityUtils.getSystemInfo();
 
         // Assert
-        assertTrue(info.toString().contains("OS: " + System.getProperty("os.name")));
-    }
-
-    @Test
-    @DisplayName("Debería no modificar el StringBuilder original si se llama sin append")
-    void testNoModificationWithoutAppend() {
-        // Arrange
-        StringBuilder info = new StringBuilder("Initial Info");
-
-        // Act
-        // No action taken
-
-        // Assert
-        assertTrue(info.toString().equals("Initial Info"));
+        assertEquals(expectedInfo, actualInfo, "El método getSystemInfo debería retornar 'Información restringida'");
     }
 }
 ```
