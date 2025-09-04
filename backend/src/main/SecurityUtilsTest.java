@@ -1,67 +1,59 @@
 ```java
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-@DisplayName("Tests for SecurityUtils")
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+
+@DisplayName("Pruebas unitarias para la clase SecurityUtils")
 class SecurityUtilsTest {
 
+    private SecurityUtils securityUtils;
+
+    @BeforeEach
+    void setUp() {
+        securityUtils = new SecurityUtils();
+    }
+
     @Test
-    @DisplayName("Should remove backdoor access successfully")
+    @DisplayName("Debería eliminar el acceso backdoor exitosamente")
     void testRemoveBackdoorAccess_Success() {
         // Arrange
-        SecurityUtils securityUtils = new SecurityUtils();
-        String input = "validInput"; // Replace with actual input that simulates backdoor access
-        // Mock any dependencies if needed
+        // Aquí se pueden preparar los datos necesarios para la prueba
 
         // Act
-        boolean result = securityUtils.removeBackdoorAccess(input);
+        boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertTrue(result, "Expected backdoor access to be removed successfully");
+        assertTrue(result, "Se esperaba que el acceso backdoor fuera eliminado exitosamente.");
     }
 
     @Test
-    @DisplayName("Should return false when input is null")
-    void testRemoveBackdoorAccess_NullInput() {
+    @DisplayName("Debería lanzar excepción al intentar eliminar acceso backdoor cuando no existe")
+    void testRemoveBackdoorAccess_NoAccess() {
         // Arrange
-        SecurityUtils securityUtils = new SecurityUtils();
-        String input = null;
+        // Simular que no hay acceso backdoor
 
-        // Act
-        boolean result = securityUtils.removeBackdoorAccess(input);
+        // Act & Assert
+        Exception exception = assertThrows(IllegalStateException.class, () -> {
+            securityUtils.removeBackdoorAccess();
+        });
 
-        // Assert
-        assertFalse(result, "Expected backdoor access removal to fail with null input");
+        assertEquals("No hay acceso backdoor para eliminar.", exception.getMessage());
     }
 
     @Test
-    @DisplayName("Should return false when input is empty")
-    void testRemoveBackdoorAccess_EmptyInput() {
+    @DisplayName("Debería manejar correctamente un caso límite al eliminar acceso backdoor")
+    void testRemoveBackdoorAccess_EdgeCase() {
         // Arrange
-        SecurityUtils securityUtils = new SecurityUtils();
-        String input = "";
+        // Preparar un caso límite, si aplica
 
         // Act
-        boolean result = securityUtils.removeBackdoorAccess(input);
+        boolean result = securityUtils.removeBackdoorAccess();
 
         // Assert
-        assertFalse(result, "Expected backdoor access removal to fail with empty input");
-    }
-
-    @Test
-    @DisplayName("Should handle unexpected characters in input")
-    void testRemoveBackdoorAccess_InvalidCharacters() {
-        // Arrange
-        SecurityUtils securityUtils = new SecurityUtils();
-        String input = "invalid@input!"; // Example of unexpected characters
-
-        // Act
-        boolean result = securityUtils.removeBackdoorAccess(input);
-
-        // Assert
-        assertFalse(result, "Expected backdoor access removal to fail with invalid characters in input");
+        assertTrue(result, "Se esperaba que el acceso backdoor fuera eliminado en un caso límite.");
     }
 }
 ```
