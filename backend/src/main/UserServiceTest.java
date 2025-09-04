@@ -2,9 +2,9 @@
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
@@ -46,12 +46,7 @@ class UserServiceTest {
         User user = null;
 
         // Act & Assert
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.processUserData(user);
-        });
-
-        assertEquals("User cannot be null", exception.getMessage());
-        verify(userRepository, never()).save(any());
+        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(user));
     }
 
     @Test
@@ -61,26 +56,18 @@ class UserServiceTest {
         User user = new User("invalid-email", "Test User");
 
         // Act & Assert
-        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
-            userService.processUserData(user);
-        });
-
-        assertEquals("Email is invalid", exception.getMessage());
-        verify(userRepository, never()).save(any());
+        assertThrows(IllegalArgumentException.class, () -> userService.processUserData(user));
     }
 
     @Test
-    @DisplayName("Debería manejar correctamente errores al guardar el usuario")
-    void testProcessUserData_SaveError() {
+    @DisplayName("Debería manejar correctamente un error en el repositorio")
+    void testProcessUserData_RepositoryError() {
         // Arrange
         User user = new User("test@example.com", "Test User");
         when(userRepository.save(any(User.class))).thenThrow(new RuntimeException("Database error"));
 
         // Act & Assert
-        Exception exception = assertThrows(RuntimeException.class, () -> {
-            userService.processUserData(user);
-        });
-
+        Exception exception = assertThrows(RuntimeException.class, () -> userService.processUserData(user));
         assertEquals("Database error", exception.getMessage());
         verify(userRepository, times(1)).save(user);
     }

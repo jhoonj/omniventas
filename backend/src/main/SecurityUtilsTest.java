@@ -1,65 +1,65 @@
 ```java
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
+@DisplayName("Pruebas unitarias para la clase SecurityUtils")
 class SecurityUtilsTest {
 
-    @DisplayName("Debería incrementar el número de intentos de inicio de sesión")
     @Test
-    void shouldIncrementLoginAttempts() {
+    @DisplayName("Debería eliminar el acceso de backdoor correctamente")
+    void testRemoveBackdoorAccess_Success() {
         // Arrange
-        AtomicInteger loginAttempts = new AtomicInteger(0);
-        
+        SecurityUtils securityUtils = new SecurityUtils();
+        // Suponiendo que hay un método para agregar acceso de backdoor
+        securityUtils.addBackdoorAccess("user1");
+
         // Act
-        loginAttempts.incrementAndGet();
-        
+        boolean result = securityUtils.removeBackdoorAccess("user1");
+
         // Assert
-        assertEquals(1, loginAttempts.get());
+        assertTrue(result, "El acceso de backdoor debería ser eliminado exitosamente.");
     }
 
-    @DisplayName("Debería reiniciar los intentos de inicio de sesión")
     @Test
-    void shouldResetLoginAttempts() {
+    @DisplayName("Debería retornar false al intentar eliminar un acceso de backdoor que no existe")
+    void testRemoveBackdoorAccess_NonExistent() {
         // Arrange
-        AtomicInteger loginAttempts = new AtomicInteger(3);
-        
+        SecurityUtils securityUtils = new SecurityUtils();
+
         // Act
-        loginAttempts.set(0);
-        
+        boolean result = securityUtils.removeBackdoorAccess("nonExistentUser");
+
         // Assert
-        assertEquals(0, loginAttempts.get());
+        assertFalse(result, "Debería retornar false al intentar eliminar un acceso que no existe.");
     }
 
-    @DisplayName("Debería manejar múltiples intentos de inicio de sesión")
     @Test
-    void shouldHandleMultipleLoginAttempts() {
+    @DisplayName("Debería manejar correctamente la eliminación de acceso de backdoor con entrada nula")
+    void testRemoveBackdoorAccess_NullInput() {
         // Arrange
-        AtomicInteger loginAttempts = new AtomicInteger(0);
-        
+        SecurityUtils securityUtils = new SecurityUtils();
+        securityUtils.addBackdoorAccess("user1");
+
         // Act
-        for (int i = 0; i < 5; i++) {
-            loginAttempts.incrementAndGet();
-        }
-        
+        boolean result = securityUtils.removeBackdoorAccess(null);
+
         // Assert
-        assertEquals(5, loginAttempts.get());
+        assertFalse(result, "Debería retornar false al intentar eliminar un acceso con entrada nula.");
     }
 
-    @DisplayName("Debería no permitir valores negativos en intentos de inicio de sesión")
     @Test
-    void shouldNotAllowNegativeLoginAttempts() {
+    @DisplayName("Debería manejar correctamente la eliminación de acceso de backdoor con entrada vacía")
+    void testRemoveBackdoorAccess_EmptyInput() {
         // Arrange
-        AtomicInteger loginAttempts = new AtomicInteger(0);
-        
+        SecurityUtils securityUtils = new SecurityUtils();
+        securityUtils.addBackdoorAccess("user1");
+
         // Act
-        loginAttempts.set(-1);
-        
+        boolean result = securityUtils.removeBackdoorAccess("");
+
         // Assert
-        assertEquals(0, loginAttempts.get());
+        assertFalse(result, "Debería retornar false al intentar eliminar un acceso con entrada vacía.");
     }
 }
 ```
